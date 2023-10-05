@@ -4,9 +4,9 @@ clear; close all; tic;
 addpath('C:\Users\seboe\OneDrive - Emory University\Documents\Grad School\Neuromechanics Lab\SRM\SRM-Practice\SRMUtilities')
 addpath('C:\Users\seboe\OneDrive - Emory University\Documents\Grad School\Neuromechanics Lab\SRM\matlabUtilities-master')
 
-load('C:\Users\seboe\OneDrive - Emory University\Documents\Grad School\Neuromechanics Lab\SRM\Data\HOA_PD_DataTables_4-Oct-2023.mat') %output measures Table (EEG, EMG, etc.)
+load('C:\Users\seboe\OneDrive - Emory University\Documents\Grad School\Neuromechanics Lab\SRM\Data\SRM Analysis\HOA_PD_DataTables_05-Oct-2023.mat') %output measures Table (EEG, EMG, etc.)
 % DataAvTable.Cz = double(DataAvTable.Cz); %convert Cz(t) to class double for SRM recon
-figdir = 'C:\Users\seboe\OneDrive - Emory University\Documents\Grad School\Neuromechanics Lab\SRM\Data\SRM Analysis\savedfigs\HOA_PD_SRM_savedfigs\';
+figdir = 'C:\Users\seboe\OneDrive - Emory University\Documents\Grad School\Neuromechanics Lab\SRM\Data\SRM Analysis\HOA_PD_SRM_savedfigs\';
 
 %% User inputs
 removeBackLev = 1;
@@ -20,6 +20,7 @@ cSRMs_opt = false;
 % Grouping Variables
 direcs = unique(data.pertdir_calc_round_deg); % directions to be analyzed (90 and 270)
 Participants = unique(DataAvTable.Participant); %Participant numerical marker (1, 2,3 -- double)
+mags = unique(dataAv.condition)
 Groups = unique(DataAvTable.Group); %Group marker ("HOA" or "PD" -- string)
 subj_IDs = unique(DataAvTable.subj_ID); %Unique subject code (i.e. "HOA02" -- string)
 
