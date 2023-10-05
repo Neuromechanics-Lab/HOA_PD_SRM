@@ -103,9 +103,6 @@ for i = 1:length(participants) %participant loop
                 saveas(gcf,[figdir + participant + '_DualSRMCompare_mag' + num2str(mag) + '_direc' + num2str(direc) + '.jpg'],'jpg')
                 print(gcf,'-depsc2',[figdir + participant + '_DualSRMCompare_mag' + num2str(mag) + '_direc' + num2str(direc) + '.eps'])
             end
-            
-            %% plot SRM vs Data Comparison
-            
         end %mag loop
     end % direction loop
     close all
