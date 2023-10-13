@@ -1,11 +1,13 @@
 %% Script to modify EEG.event structure to reflect trial conditions rather than trial number for easy epoching
 close all; clear
-% create file list to be loaded
-fdir = 'X:\\ting\\shared_ting\\Scott\\HOA_PD EEG Data'; % folder path that contains preprocessed EEG data
-files = dir(fullfile(fdir, '*above70.set'));
 % initialize eeglab
 addpath('D:\Users\SBOEBIN\Documents\MATLAB\eeglab2021.0\')
 [ALLEEG, EEG, CURRENTSET, ALLCOM] = eeglab;
+
+% create file list to be loaded
+fdir = 'X:\\ting\\shared_ting\\Scott\\HOA_PD EEG Data'; % folder path that contains preprocessed EEG data
+files = dir(fullfile(fdir, '*above70.set'));
+files(1:end-3,:) = [];
 %% update the EEG.event.type to reflect trial conditions for epoching
 for i = 1:size(files,1)
     % load EEG data
@@ -32,22 +34,42 @@ for i = 1:size(files,1)
     
     % iterate across every row of EEG.event to modify it to trial condition
     for ii = 1:size(EEG.event,2)
-        try % there is a possibility that EEG.event(ii).type is 'S 15' which cannot be converted to a double
-            if any(ind_1_90 == str2double(EEG.event(ii).type)) % see if EEG.event(ii).type is included in condition indexes
-                EEG.event(ii).type = trigs(1);
-            elseif any(ind_2_90 == str2double(EEG.event(ii).type))
-                EEG.event(ii).type = trigs(3);
-            elseif any(ind_3_90 == str2double(EEG.event(ii).type))
-                EEG.event(ii).type = trigs(5);
-            elseif any(ind_1_270 == str2double(EEG.event(ii).type))
-                EEG.event(ii).type = trigs(2);
-            elseif any(ind_2_270 == str2double(EEG.event(ii).type))
-                EEG.event(ii).type = trigs(4);
-            elseif any(ind_3_270 == str2double(EEG.event(ii).type))
-                EEG.event(ii).type = trigs(6);
+        if strcmp(filename,'PD20_brain_above70.set') || strcmp(filename,'PD21_brain_above70.set')
+            try % there is a possibility that EEG.event(ii).type is 'S 15' which cannot be converted to a double
+                if any(ind_1_90 == EEG.event(ii).epoch) % see if EEG.event(ii).type is included in condition indexes
+                    EEG.event(ii).type = trigs(1);
+                elseif any(ind_2_90 == EEG.event(ii).epoch)
+                    EEG.event(ii).type = trigs(3);
+                elseif any(ind_3_90 == EEG.event(ii).epoch)
+                    EEG.event(ii).type = trigs(5);
+                elseif any(ind_1_270 == EEG.event(ii).epoch)
+                    EEG.event(ii).type = trigs(2);
+                elseif any(ind_2_270 == EEG.event(ii).epoch)
+                    EEG.event(ii).type = trigs(4);
+                elseif any(ind_3_270 == EEG.event(ii).epoch)
+                    EEG.event(ii).type = trigs(6);
+                end
+            catch % if EEG.event(ii).type is 'S 15' then remove that row from EEG.event
+                EEG.event(ii) = [];
             end
-        catch % if EEG.event(ii).type is 'S 15' then remove that row from EEG.event
-            EEG.event(ii) = [];
+        else
+            try % there is a possibility that EEG.event(ii).type is 'S 15' which cannot be converted to a double
+                if any(ind_1_90 == str2double(EEG.event(ii).type)) % see if EEG.event(ii).type is included in condition indexes
+                    EEG.event(ii).type = trigs(1);
+                elseif any(ind_2_90 == str2double(EEG.event(ii).type))
+                    EEG.event(ii).type = trigs(3);
+                elseif any(ind_3_90 == str2double(EEG.event(ii).type))
+                    EEG.event(ii).type = trigs(5);
+                elseif any(ind_1_270 == str2double(EEG.event(ii).type))
+                    EEG.event(ii).type = trigs(2);
+                elseif any(ind_2_270 == str2double(EEG.event(ii).type))
+                    EEG.event(ii).type = trigs(4);
+                elseif any(ind_3_270 == str2double(EEG.event(ii).type))
+                    EEG.event(ii).type = trigs(6);
+                end
+            catch % if EEG.event(ii).type is 'S 15' then remove that row from EEG.event
+                EEG.event(ii) = [];
+            end
         end
     end
     % save updated data
