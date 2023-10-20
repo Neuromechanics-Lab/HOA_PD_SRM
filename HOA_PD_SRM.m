@@ -8,7 +8,7 @@ pcname = "cpu1"; % cpu1
 if strcmp("cpu1",pcname)
     addpath('D:\Users\SBOEBIN\Documents\MATLAB\SRMUtilities')
     addpath('D:\Users\SBOEBIN\Documents\MATLAB\matlabUtilities-master')
-    load('D:\Users\SBOEBIN\Documents\MATLAB\Post creatfitsData Output\HOA_PD_DataTables_05-Oct-2023.mat') %output measures Table (EEG, EMG, etc.)
+    load('D:\Users\SBOEBIN\Documents\MATLAB\Post creatfitsData Output\HOA_PD_DataTables_interp_norm_18-Oct-2023.mat') %output measures Table (EEG, EMG, etc.)
     savedir = 'D:\Users\SBOEBIN\Documents\MATLAB\HOA_PD_SRM_Output\';
     figdir = 'D:\Users\SBOEBIN\Documents\MATLAB\HOA_PD_SRM_Output\savedfigs\';
 elseif strcmp("pc",pcname)
@@ -23,16 +23,16 @@ end
 %% User inputs
 removeBackLev = 1;
 % Saving options (if = 1 then will save)
-saveopt = 1; %Output
+saveopt = true; %Output
 savefigopt = 0; %Figures
-plotopt = false %option to plot figures at all
+plotopt = false; %option to plot figures at all
 
 % SRM reconstruction options
-cSRMs_opt = false;
+cSRMs_opt = true;
 
 % Grouping Variables
 direcs = unique(dataAv.pertdir_calc_round_deg); % directions to be analyzed (90 and 270)
-mags = unique(dataAv.condition);
+mags = unique(dataAv.pert_mag);
 groups = unique(dataAv.group); %Group marker ("HOA" or "PD" -- string)
 % subj_IDs = unique(dataAv.patient); %Unique subject code (i.e. "HOA02" -- string)
 participants = unique(dataAv.patient); %Unique subject code (i.e. "HOA02" -- string)
@@ -47,15 +47,15 @@ ind_time = find(dataAv.atime(1,:) > min_time & dataAv.atime(1,:) <= max_time); %
 TableHeight = size(dataAv,1);
 ReconLength = length(dataAv.atime(1,ind_time)); %length of SRM Recon
 % Feedback Gains
-Ag_Gains = nan([TableHeight,4]);
-Antag_Gains = nan([TableHeight,8]);
-Beta_Gains = nan([TableHeight,4]);
-Cz_Gains = nan([TableHeight,4]);
+Gains_Ag = nan([TableHeight,4]);
+Gains_Antag = nan([TableHeight,8]);
+Gains_Beta = nan([TableHeight,4]);
+Gains_Cz = nan([TableHeight,4]);
 % SRM Reconstructions
-BetaRecon = nan([TableHeight,ReconLength]);
-AgonistRecon = nan([TableHeight,ReconLength]);
-AntagonistRecon = nan([TableHeight,ReconLength]);
-CzRecon = nan([TableHeight,ReconLength]);
+Recon_Beta = nan([TableHeight,ReconLength]);
+Recon_Agonist = nan([TableHeight,ReconLength]);
+Recon_Antagonist = nan([TableHeight,ReconLength]);
+Recon_Cz = nan([TableHeight,ReconLength]);
 
 % Reconstruction fits
 fit_beta = nan([TableHeight,2]);
@@ -65,60 +65,57 @@ fit_Cz = nan([TableHeight,2]);
 
 % Residual SRM Outputs (w/ beta)
 Residual = nan([TableHeight,ReconLength]);
-Residual_Gains_beta = nan([TableHeight,2]);
-ResidualRecon_beta = nan([TableHeight,ReconLength]);
+Gains_Residual_beta = nan([TableHeight,2]);
+Recon_Residual_beta = nan([TableHeight,ReconLength]);
 fit_residual_beta = nan([TableHeight,2]);
 
 % Dual SRM Outputs (w/ beta as predictor)
-Ag_Gains_Dual_beta = nan([TableHeight,6]);
-Ag_Gains_TotalDual_beta = nan([TableHeight,6]);
-AgonistRecon_Dual_beta = nan([TableHeight,ReconLength]);
-AgonistRecon_TotalDual_beta = nan([TableHeight,ReconLength]);
-fit_agonist_Dual_beta = nan([TableHeight,2]);
+Gains_Ag_TotalDual_beta = nan([TableHeight,6]);
+Recon_Agonist_TotalDual_beta = nan([TableHeight,ReconLength]);
 fit_agonist_TotalDual_beta = nan([TableHeight,2]);
 
 % Residual SRM Outputs (w/ Cz)
-Residual_Gains_Cz = nan([TableHeight,2]);
-ResidualRecon_Cz = nan([TableHeight,ReconLength]);
+Gains_Residual_Cz = nan([TableHeight,2]);
+Recon_Residual_Cz = nan([TableHeight,ReconLength]);
 fit_residual_Cz = nan([TableHeight,2]);
 
 % Dual SRM Outputs (w/ Cz as predictor)
-Ag_Gains_TotalDual_Cz = nan([TableHeight,6]);
-AgonistRecon_TotalDual_Cz = nan([TableHeight,ReconLength]);
+Gains_Ag_TotalDual_Cz = nan([TableHeight,6]);
+Recon_Agonist_TotalDual_Cz = nan([TableHeight,ReconLength]);
 fit_agonist_TotalDual_Cz = nan([TableHeight,2]);
 
 % Residual SRM Outputs (w/ CoM)
-Residual_Gains_CoM = nan([TableHeight,4]);
-ResidualRecon_CoM = nan([TableHeight,ReconLength]);
+Gains_Residual_CoM = nan([TableHeight,4]);
+Recon_Residual_CoM = nan([TableHeight,ReconLength]);
 fit_residual_CoM = nan([TableHeight,2]);
 
 % Dual SRM Outputs (w/ CoM as predictor)
-Ag_Gains_TotalDual_CoM = nan([TableHeight,8]);
-AgonistRecon_TotalDual_CoM = nan([TableHeight,ReconLength]);
+Gains_Ag_TotalDual_CoM = nan([TableHeight,8]);
+Recon_Agonist_TotalDual_CoM = nan([TableHeight,ReconLength]);
 fit_agonist_TotalDual_CoM = nan([TableHeight,2]);
 
-temp_Table = table(Residual, Ag_Gains, Antag_Gains, Beta_Gains, Cz_Gains, BetaRecon, CzRecon, AgonistRecon,...
-    AntagonistRecon, fit_beta, fit_Cz, fit_agonist, fit_antagonist, Ag_Gains_Dual_beta, Ag_Gains_TotalDual_beta,...
-    AgonistRecon_Dual_beta, AgonistRecon_TotalDual_beta, fit_agonist_Dual_beta, fit_agonist_TotalDual_beta,...
-    Residual_Gains_beta, ResidualRecon_beta, fit_residual_beta, Ag_Gains_TotalDual_Cz,...
-    AgonistRecon_TotalDual_Cz, fit_agonist_TotalDual_Cz,...
-    Residual_Gains_Cz, ResidualRecon_Cz, fit_residual_Cz,...
-    Ag_Gains_TotalDual_CoM,...
-    AgonistRecon_TotalDual_CoM, fit_agonist_TotalDual_CoM,...
-    Residual_Gains_CoM, ResidualRecon_CoM, fit_residual_CoM,...
-    'VariableNames',{'Residual','Ag_Gains', 'Antag_Gains', 'Beta_Gains', 'Cz_Gains', 'BetaRecon', 'CzRecon', 'AgonistRecon',...
-    'AntagonistRecon', 'fit_beta', 'fit_Cz', 'fit_agonist', 'fit_antagonist', 'Ag_Gains_Dual_beta', 'Ag_Gains_TotalDual_beta',...
-    'AgonistRecon_Dual_beta', 'AgonistRecon_TotalDual_beta', 'fit_agonist_Dual_beta', 'fit_agonist_TotalDual_beta',...
-    'Residual_Gains_beta', 'ResidualRecon_beta', 'fit_residual_beta', 'Ag_Gains_TotalDual_Cz',...
-    'AgonistRecon_TotalDual_Cz', 'fit_agonist_TotalDual_Cz',...
-    'Residual_Gains_Cz', 'ResidualRecon_Cz', 'fit_residual_Cz',...
-    'Ag_Gains_TotalDual_CoM',...
-    'AgonistRecon_TotalDual_CoM', 'fit_agonist_TotalDual_CoM',...
-    'Residual_Gains_CoM', 'ResidualRecon_CoM', 'fit_residual_CoM'});
+temp_Table = table(Residual, Gains_Ag, Gains_Antag, Gains_Beta, Gains_Cz, Recon_Beta, Recon_Cz, Recon_Agonist,...
+    Recon_Antagonist, fit_beta, fit_Cz, fit_agonist, fit_antagonist, Gains_Ag_TotalDual_beta,...
+    Recon_Agonist_TotalDual_beta, fit_agonist_TotalDual_beta,...
+    Gains_Residual_beta, Recon_Residual_beta, fit_residual_beta, Gains_Ag_TotalDual_Cz,...
+    Recon_Agonist_TotalDual_Cz, fit_agonist_TotalDual_Cz,...
+    Gains_Residual_Cz, Recon_Residual_Cz, fit_residual_Cz,...
+    Gains_Ag_TotalDual_CoM,...
+    Recon_Agonist_TotalDual_CoM, fit_agonist_TotalDual_CoM,...
+    Gains_Residual_CoM, Recon_Residual_CoM, fit_residual_CoM,...
+    'VariableNames',{'Residual','Gains_Ag', 'Gains_Antag', 'Gains_Beta', 'Gains_Cz', 'Recon_Beta', 'Recon_Cz', 'Recon_Agonist',...
+    'Recon_Antagonist', 'fit_beta', 'fit_Cz', 'fit_agonist', 'fit_antagonist', 'Gains_Ag_TotalDual_beta',...
+    'Recon_Agonist_TotalDual_beta','fit_agonist_TotalDual_beta',...
+    'Gains_Residual_beta', 'Recon_Residual_beta', 'fit_residual_beta', 'Gains_Ag_TotalDual_Cz',...
+    'Recon_Agonist_TotalDual_Cz', 'fit_agonist_TotalDual_Cz',...
+    'Gains_Residual_Cz', 'Recon_Residual_Cz', 'fit_residual_Cz',...
+    'Gains_Ag_TotalDual_CoM',...
+    'Recon_Agonist_TotalDual_CoM', 'fit_agonist_TotalDual_CoM',...
+    'Gains_Residual_CoM', 'Recon_Residual_CoM', 'fit_residual_CoM'});
 
 dataAv = [dataAv temp_Table];
 % clear dummy variables from above
-clear Residual Ag_Gains  Antag_Gains  Beta_Gains  Cz_Gains  BetaRecon  CzRecon  AgonistRecon AntagonistRecon  fit_beta  fit_Cz  fit_agonist  fit_antagonist  Ag_Gains_Dual_beta  Ag_Gains_TotalDual_beta AgonistRecon_Dual_beta  AgonistRecon_TotalDual_beta  fit_agonist_Dual_beta  fit_agonist_TotalDual_beta Residual_Gains_beta  ResidualRecon_beta  fit_residual_beta  Ag_Gains_TotalDual_Cz AgonistRecon_TotalDual_Cz  fit_agonist_TotalDual_Cz Residual_Gains_Cz  ResidualRecon_Cz  fit_residual_Cz Ag_Gains_TotalDual_CoM AgonistRecon_TotalDual_CoM  fit_agonist_TotalDual_CoM Residual_Gains_CoM  ResidualRecon_CoM  fit_residual_CoM
+clear Residual Gains_Ag  Gains_Antag  Gains_Beta  Gains_Cz  Recon_Beta  Recon_Cz  Recon_Agonist Recon_Antagonist  fit_beta  fit_Cz  fit_agonist  fit_antagonist  Gains_Ag_Dual_beta  Gains_Ag_TotalDual_beta Recon_Agonist_Dual_beta  Recon_Agonist_TotalDual_beta  fit_agonist_Dual_beta  fit_agonist_TotalDual_beta Gains_Residual_beta  Recon_Residual_beta  fit_residual_beta  Gains_Ag_TotalDual_Cz Recon_Agonist_TotalDual_Cz  fit_agonist_TotalDual_Cz Gains_Residual_Cz  Recon_Residual_Cz  fit_residual_Cz Gains_Ag_TotalDual_CoM Recon_Agonist_TotalDual_CoM  fit_agonist_TotalDual_CoM Gains_Residual_CoM  Recon_Residual_CoM  fit_residual_CoM
 %% Run SRM
 loopbreak = false;
 for Participant = participants' % iterate across each participant
@@ -143,7 +140,7 @@ for Participant = participants' % iterate across each participant
             %condition index - to pull correct variables for SRM
             %analysis (i.e. correct row in dataAv)
             ind_cond = find(dataAv.patient == Participant & ...
-                dataAv.pertdir_calc_round_deg == direction & dataAv.condition == mag);
+                dataAv.pertdir_calc_round_deg == direction & dataAv.pert_mag == mag);
             
             % Break if there are no participants that fit the unique group/participant
             if isempty(ind_cond)
@@ -157,13 +154,17 @@ for Participant = participants' % iterate across each participant
             
             %specify which muscle is acting as an agonist/antagonist
             if direction == 90 %forward pert
-                agonist = dataAv.EMG_TA_L(ind_cond,:); tag_ag='TA'; ag_norm = dataAv.EMG_TA_L_norm(ind_cond,:);
-                antagonist = dataAv.EMG_MGAS_L(ind_cond,:); tag_antag='MG'; antag_norm = dataAv.EMG_MGAS_L_norm(ind_cond,:);
+                agonist = dataAv.EMG_TA_L_norm(ind_cond,:); tag_ag='TA'; ag_norm = dataAv.EMG_TA_L_norm(ind_cond,:);
+                antagonist = dataAv.EMG_MGAS_L_norm(ind_cond,:); tag_antag='MG'; antag_norm = dataAv.EMG_MGAS_L_norm(ind_cond,:);
             elseif direction == 270 %backward pert
-                antagonist = dataAv.EMG_TA_L(ind_cond,:); tag_antag='TA'; antag_norm = dataAv.EMG_TA_L_norm(ind_cond,:);
-                agonist = dataAv.EMG_MGAS_L(ind_cond,:); tag_ag='MG'; ag_norm = dataAv.EMG_MGAS_L_norm(ind_cond,:);
+                antagonist = dataAv.EMG_TA_L_norm(ind_cond,:); tag_antag='TA'; antag_norm = dataAv.EMG_TA_L_norm(ind_cond,:);
+                agonist = dataAv.EMG_MGAS_L_norm(ind_cond,:); tag_ag='MG'; ag_norm = dataAv.EMG_MGAS_L_norm(ind_cond,:);
             else
                 error('Unspecified Direction')
+            end
+            if cSRMs_opt
+                Cz = dataAv.Cz_norm(ind_cond,:);
+                beta = dataAv.beta_ersp_norm(ind_cond,:);
             end
             
             %% specify CoM kinematics
@@ -185,18 +186,8 @@ for Participant = participants' % iterate across each participant
                 a_ag = a; v_ag = v; d_ag = d;
                 a_antag = -a; v_antag = -v; d_antag = -d;
             end
-            %% interpolate everything to be same length as atime <- not necessary for COM (MAY NOT BE NEEDED AFTER ADDING IN EEG OUTPUT MEASURES)
-            %             if cSRMs_opt
-            %                 %EEG outcome measures
-            %                 time_eeg = dataAv.time_eeg(ind_cond,:);
-            %                 Cz = dataAv.Cz(ind_cond,:);
-            %                 Cz = Cz/abs(dataAv.N1_amp(ind_cond,:)); %normalize Cz(t) to N1 amplitude (abs() b/c N1_amp is negative)
-            %                 Cz = interp1(time_eeg/1000, Cz, atime);
-            %
-            %                 time_ersp = dataAv.time_ersp(ind_cond,:);
-            %                 beta = dataAv.beta_ersp(ind_cond,:);
-            %                 beta  = interp1(time_ersp/1000, beta,  atime);
-            %             end
+            
+            
             
             %% Prime variables for SRM - remove back lev and make gain variables
             x_ag = nan; % agonist gain
@@ -255,9 +246,6 @@ for Participant = participants' % iterate across each participant
                 predictorsResiduals_beta = beta(ind_time);
                 LB = [0 x_ag(4)+0.010]; %[k_beta lambda_beta];
                 UB = [15.0 0.300];%[k_beta lambda_beta];
-                if Participant == 12 & mag == 3
-                    LB(end) = 0.150;
-                end
                 [x_residual_beta([1:2]), eRecon_residual_beta, fit_residual_beta] = fitResidualSRM_eeg(residual, atime(ind_time), predictorsResiduals_beta, subjID, mag,LB, UB);
                 
                 %% Fit dual SRM (fit EMG w/ CoM & beta)
@@ -326,728 +314,53 @@ for Participant = participants' % iterate across each participant
                     Cz = Cz + backLev_Cz;
                 end
             end
-            %% Plot SRM Outputs
-            if plotopt
-                %% Plot single trial and mean EMG, EEG, and CoM kinematics
-                %                 fig_RawData = figure(2); set(fig_RawData,'WindowState','maximized');
-                %                 c = (xx-1).*3+yy; % counter for plot position % xx = direction counter;  y == mag counter
-                %                 yl_EMG = 'auto'; % [0 0.3];
-                %                 % Agonist Muscle Activity
-                %                 plotij(7,3,1,c); hold on
-                %                 for j = 1:length(ind_cond_singletrial)
-                %                     if direction == 270
-                %                         plot_tag(dataAv.atime(ind_cond_singletrial(1),:),dataAv.MGL(ind_cond_singletrial(j),:),string(ind_cond_singletrial(j)),'color',0.5.*[1 1 1])
-                %                     elseif direction == 90
-                %                         plot_tag(dataAv.atime(ind_cond_singletrial(1),:),dataAv.TAL(ind_cond_singletrial(j),:),string(ind_cond_singletrial(j)),'color',0.5.*[1 1 1])
-                %                     end
-                %                 end
-                %                 plot(atime,agonist*ag_norm,'k','LineWidth', 1)
-                %                 ylabel([tag_ag ' EMG']); ylim(yl_EMG); title(['Mag = ' num2str(mag)])
-                %                 if yy == 1
-                %                     tmp_AgEMG_axis_mag1 = gca;
-                %                     tmp_AgEMG_yl_mag1 = tmp_AgEMG_axis_mag1.YLim;
-                %                 elseif yy == 2
-                %                     tmp_AgEMG_axis_mag2 = gca;
-                %                     tmp_AgEMG_yl_mag2 = tmp_AgEMG_axis_mag2.YLim;
-                %                 elseif yy == 3
-                %                     tmp_AgEMG_axis_mag3 = gca;
-                %                     tmp_AgEMG_yl_mag3 = tmp_AgEMG_axis_mag3.YLim;
-                %
-                %                     tmp_AgEMG_yl = [tmp_AgEMG_yl_mag1; tmp_AgEMG_yl_mag2; tmp_AgEMG_yl_mag3];
-                %                     tmp_AgEMG_yl = [min(tmp_AgEMG_yl(:)) max(tmp_AgEMG_yl(:))];
-                %                     set(tmp_AgEMG_axis_mag1,'YLim',tmp_AgEMG_yl)
-                %                     set(tmp_AgEMG_axis_mag2,'YLim',tmp_AgEMG_yl)
-                %                     set(tmp_AgEMG_axis_mag3,'YLim',tmp_AgEMG_yl)
-                %                 end
-                %
-                %                 % Antagonist Muscle Activity
-                %                 plotij(7,3,2,c);  hold on
-                %                 for j = 1:length(ind_cond_singletrial)
-                %                     if direction == 270
-                %                         plot_tag(dataAv.atime(ind_cond_singletrial(1),:),dataAv.TAL(ind_cond_singletrial(j),:),string(ind_cond_singletrial(j)),'color',0.5.*[1 1 1])
-                %                     elseif direction == 90
-                %                         plot_tag(dataAv.atime(ind_cond_singletrial(1),:),dataAv.MGL(ind_cond_singletrial(j),:),string(ind_cond_singletrial(j)),'color',0.5.*[1 1 1])
-                %                     end
-                %                 end
-                %                 plot(atime,antagonist*antag_norm,'k','LineWidth', 1)
-                %                 ylabel([tag_antag ' EMG']); ylim(yl_EMG)
-                %
-                %                 if yy == 1
-                %                     tmp_AnEMG_axis_mag1 = gca;
-                %                     tmp_AnEMG_yl_mag1 = tmp_AnEMG_axis_mag1.YLim;
-                %                 elseif yy == 2
-                %                     tmp_AnEMG_axis_mag2 = gca;
-                %                     tmp_AnEMG_yl_mag2 = tmp_AnEMG_axis_mag2.YLim;
-                %                 elseif yy == 3
-                %                     tmp_AnEMG_axis_mag3 = gca;
-                %                     tmp_AnEMG_yl_mag3 = tmp_AnEMG_axis_mag3.YLim;
-                %
-                %                     tmp_AnEMG_yl = [tmp_AnEMG_yl_mag1; tmp_AnEMG_yl_mag2; tmp_AnEMG_yl_mag3];
-                %                     tmp_AnEMG_yl = [min(tmp_AnEMG_yl(:)) max(tmp_AnEMG_yl(:))];
-                %                     set(tmp_AnEMG_axis_mag1,'YLim',tmp_AnEMG_yl)
-                %                     set(tmp_AnEMG_axis_mag2,'YLim',tmp_AnEMG_yl)
-                %                     set(tmp_AnEMG_axis_mag3,'YLim',tmp_AnEMG_yl)
-                %                 end
-                %
-                %                 % Beta Power
-                %                 plotij(7,3,3,c);  hold on
-                %                 for j = 1:length(ind_cond_singletrial)
-                %                     plot_tag(dataAv.time(ind_cond_singletrial(1),:)/1000,dataAv.beta_ersp(ind_cond_singletrial(j),:),string(ind_cond_singletrial(j)),'color',0.5.*[1 1 1])
-                %                 end
-                %                 plot(atime,beta*dataAv.beta_norm(ind_cond),'k','LineWidth', 1)
-                %                 ylabel(['Beta']); xlim([-0.5 2]); %ylim(yl)
-                %
-                %                 if mag == 1
-                %                     tmp_betadata_axis_mag1 = gca;
-                %                     tmp_betadata_yl_mag1 = tmp_betadata_axis_mag1.YLim;
-                %                 elseif mag == 2
-                %                     tmp_betadata_axis_mag2 = gca;
-                %                     tmp_betadata_yl_mag2 = tmp_betadata_axis_mag2.YLim;
-                %                 elseif mag == 3
-                %                     tmp_betadata_axis_mag3 = gca;
-                %                     tmp_betadata_yl_mag3 = tmp_betadata_axis_mag3.YLim;
-                %
-                %                     tmp_betadata_yl = [tmp_betadata_yl_mag1; tmp_betadata_yl_mag2; tmp_betadata_yl_mag3];
-                %                     tmp_betadata_yl = [min(tmp_betadata_yl(:)) max(tmp_betadata_yl(:))];
-                %                     set(tmp_betadata_axis_mag1,'YLim',tmp_betadata_yl)
-                %                     set(tmp_betadata_axis_mag2,'YLim',tmp_betadata_yl)
-                %                     set(tmp_betadata_axis_mag3,'YLim',tmp_betadata_yl)
-                %                 end
-                %
-                %                 % Cz Power
-                %                 plotij(7,3,4,c);  hold on
-                %                 for j = 1:length(ind_cond_singletrial)
-                %                     plot_tag(dataAv.time_eeg(ind_cond_singletrial(1),:)/1000,dataAv.Cz(ind_cond_singletrial(j),:),string(ind_cond_singletrial(j)),'color',0.5.*[1 1 1])
-                %                 end
-                %                 plot(atime,Cz*abs(dataAv.N1_amp)(ind_cond),'k','LineWidth', 1)
-                %                 ylabel(['Cz']); xlim([-0.5 2]); %ylim(yl)
-                %
-                %                 if mag == 1
-                %                     tmp_Czdata_axis_mag1 = gca;
-                %                     tmp_Czdata_yl_mag1 = tmp_Czdata_axis_mag1.YLim;
-                %                 elseif mag == 2
-                %                     tmp_Czdata_axis_mag2 = gca;
-                %                     tmp_Czdata_yl_mag2 = tmp_Czdata_axis_mag2.YLim;
-                %                 elseif mag == 3
-                %                     tmp_Czdata_axis_mag3 = gca;
-                %                     tmp_Czdata_yl_mag3 = tmp_Czdata_axis_mag3.YLim;
-                %
-                %                     tmp_Czdata_yl = [tmp_Czdata_yl_mag1; tmp_Czdata_yl_mag2; tmp_Czdata_yl_mag3];
-                %                     tmp_Czdata_yl = [min(tmp_Czdata_yl(:)) max(tmp_Czdata_yl(:))];
-                %                     set(tmp_Czdata_axis_mag1,'YLim',tmp_Czdata_yl)
-                %                     set(tmp_Czdata_axis_mag2,'YLim',tmp_Czdata_yl)
-                %                     set(tmp_Czdata_axis_mag3,'YLim',tmp_Czdata_yl)
-                %                 end
-                %
-                %                 % CoM Acceleration
-                %                 plotij(7,3,5,c); hold on
-                %                 for j = 1:length(ind_cond_singletrial)
-                %                     if strcmp(subjID,'step08')
-                %                         plot_tag(dataAv.atime(1,:),-dataAv.cacc(ind_cond_singletrial(j),:),string(ind_cond_singletrial(j)),'color',0.5.*[1 1 1])
-                %                     else
-                %                         plot_tag(dataAv.atime(1,:),dataAv.cacc(ind_cond_singletrial(j),:),string(ind_cond_singletrial(j)),'color',0.5.*[1 1 1])
-                %                     end
-                %                 end
-                %                 plot(atime,a,'k','LineWidth', 1)
-                %                 ylabel('A')
-                %                 if yy == 1
-                %                     tmp7_axis_mag1 = gca;
-                %                     tmp7_yl_mag1 = tmp7_axis_mag1.YLim;
-                %                 elseif yy == 2
-                %                     tmp7_axis_mag2 = gca;
-                %                     tmp7_yl_mag2 = tmp7_axis_mag2.YLim;
-                %                 elseif yy == 3
-                %                     tmp7_axis_mag3 = gca;
-                %                     tmp7_yl_mag3 = tmp7_axis_mag3.YLim;
-                %
-                %                     tmp7_yl = [tmp7_yl_mag1; tmp7_yl_mag2; tmp7_yl_mag3];
-                %                     tmp7_yl = [min(tmp7_yl(:)) max(tmp7_yl(:))];
-                %                     set(tmp7_axis_mag1,'YLim',tmp7_yl)
-                %                     set(tmp7_axis_mag2,'YLim',tmp7_yl)
-                %                     set(tmp7_axis_mag3,'YLim',tmp7_yl)
-                %                 end
-                %
-                %                 % CoM Velocity
-                %                 plotij(7,3,6,c); hold on
-                %                 for j = 1:length(ind_cond_singletrial)
-                %                     if strcmp(subjID,'step08')
-                %                         plot_tag(dataAv.mtime(1,:),-dataAv.cvel(ind_cond_singletrial(j),:),string(ind_cond_singletrial(j)),'color',0.5.*[1 1 1])
-                %                     else
-                %                         plot_tag(dataAv.mtime(1,:),dataAv.cvel(ind_cond_singletrial(j),:),string(ind_cond_singletrial(j)),'color',0.5.*[1 1 1])
-                %                     end
-                %                 end
-                %                 plot(dataAv.atime(1,:),v,'k','LineWidth', 1)
-                %                 ylabel('V')
-                %                 if yy == 1
-                %                     tmp8_axis_mag1 = gca;
-                %                     tmp8_yl_mag1 = tmp8_axis_mag1.YLim;
-                %                 elseif yy == 2
-                %                     tmp8_axis_mag2 = gca;
-                %                     tmp8_yl_mag2 = tmp8_axis_mag2.YLim;
-                %                 elseif yy == 3
-                %                     tmp8_axis_mag3 = gca;
-                %                     tmp8_yl_mag3 = tmp8_axis_mag3.YLim;
-                %
-                %                     tmp8_yl = [tmp8_yl_mag1; tmp8_yl_mag2; tmp8_yl_mag3];
-                %                     tmp8_yl = [min(tmp8_yl(:)) max(tmp8_yl(:))];
-                %                     set(tmp8_axis_mag1,'YLim',tmp8_yl)
-                %                     set(tmp8_axis_mag2,'YLim',tmp8_yl)
-                %                     set(tmp8_axis_mag3,'YLim',tmp8_yl)
-                %                 end
-                %
-                %                 % CoM Position
-                %                 plotij(7,3,7,c); hold on
-                %                 for j = 1:length(ind_cond_singletrial)
-                %                     if strcmp(subjID,'step08')
-                %                         plot_tag(dataAv.mtime(1,:),-dataAv.cposminus(ind_cond_singletrial(j),:),string(ind_cond_singletrial(j)),'color',0.5.*[1 1 1])
-                %                     else
-                %                         plot_tag(dataAv.mtime(1,:),dataAv.cposminus(ind_cond_singletrial(j),:),string(ind_cond_singletrial(j)),'color',0.5.*[1 1 1])
-                %                     end
-                %                 end
-                %                 plot(dataAv.atime,d,'k','LineWidth', 1);
-                %                 ylabel('D')
-                %                 xlabel('Time (s)')
-                %                 if yy == 1
-                %                     tmp9_axis_mag1 = gca;
-                %                     tmp9_yl_mag1 = tmp9_axis_mag1.YLim;
-                %                 elseif yy == 2
-                %                     tmp9_axis_mag2 = gca;
-                %                     tmp9_yl_mag2 = tmp9_axis_mag2.YLim;
-                %                 elseif yy == 3
-                %                     tmp9_axis_mag3 = gca;
-                %                     tmp9_yl_mag3 = tmp9_axis_mag3.YLim;
-                %
-                %                     tmp9_yl = [tmp9_yl_mag1; tmp9_yl_mag2; tmp9_yl_mag3];
-                %                     tmp9_yl = [min(tmp9_yl(:)) max(tmp9_yl(:))];
-                %                     set(tmp9_axis_mag1,'YLim',tmp9_yl)
-                %                     set(tmp9_axis_mag2,'YLim',tmp9_yl)
-                %                     set(tmp9_axis_mag3,'YLim',tmp9_yl)
-                %                 end
-                %                 if Participant < 10
-                %                     sgtitle([subjID])
-                %                 elseif Participant >= 10
-                %                     sgtitle([subjID])
-                %                 end
-                
-                %% Plot Dual SRM Comparisons
-                yl = [0 0.5];
-                figure(xx+direction+1000); set(gcf,'WindowState','maximized');
-                %mSRM
-                ax1 = plotij(4,2,1,1); hold on
-                plot(atime,agonist,'k','LineWidth',2)
-                plot(atime(ind_time),eRecon_ag,'g','LineWidth',2)
-                title({['mSRM']...
-                    [sprintf('ka=%1.2g', x_ag(1)) ' ' sprintf('kv=%1.2g',x_ag(2)) ' ' sprintf('kd=%1.2g',x_ag(3))]})
-                legend('Data','mSRM'); ylabel([tag_ag ' EMG']);
-                text(-0.4,0.5,sprintf('R^{2} = %1.2g',fit_ag(1)))
-                text(-0.4,0.3,sprintf('VAF = %1.2g',fit_ag(2)))
-                %             % dSRM (beta)
-                %             ax2 = plotij(4,2,2,1); hold on
-                %             plot(atime,agonist,'k','LineWidth',2)
-                %             plot(atime(ind_time),eTotalRecon_ag_dual_beta,'r','LineWidth',2)
-                %             title({['dSRM - beta predictor']...
-                %                 [sprintf('ka=%1.2g', xTotal_ag_dual_beta(1)) ' ' sprintf('kv=%1.2g',xTotal_ag_dual_beta(2))...
-                %                 ' ' sprintf('kd=%1.2g',xTotal_ag_dual_beta(3)) ' ' sprintf('kb=%1.2g',xTotal_ag_dual_beta(5))]})
-                %             legend('Data','dSRM (beta)'); ylabel([tag_ag ' EMG']);
-                %             text(-0.4,0.15,sprintf('R^{2} = %1.2g',fitTotal_ag_dual_beta(1)))
-                %             text(-0.4,0.1,sprintf('VAF = %1.2g',fitTotal_ag_dual_beta(2)))
-                %             % dSRM (Cz)
-                %             ax3 = plotij(4,2,3,1); hold on
-                %             plot(atime,agonist,'k','LineWidth',2)
-                %             plot(atime(ind_time),eTotalRecon_ag_dual_Cz,'b','LineWidth',2)
-                %             title({['dSRM - Cz predictor']...
-                %                 [sprintf('ka=%1.2g', xTotal_ag_dual_Cz(1)) ' ' sprintf('kv=%1.2g',xTotal_ag_dual_Cz(2))...
-                %                 ' ' sprintf('kd=%1.2g',xTotal_ag_dual_Cz(3)) ' ' sprintf('kCz=%1.2g',xTotal_ag_dual_Cz(5))]})
-                %             legend('Data','dSRM (Cz)'); ylabel([tag_ag ' EMG']);
-                %             text(-0.4,0.15,sprintf('R^{2} = %1.2g',fitTotal_ag_dual_Cz(1)))
-                %             text(-0.4,0.1,sprintf('VAF = %1.2g',fitTotal_ag_dual_Cz(2)))
-                % dSRM (double CoM)
-                ax4 = plotij(4,2,4,1); hold on
-                plot(atime,agonist,'k','LineWidth',2)
-                plot(atime(ind_time),eTotalRecon_ag_dual_CoM,'m','LineWidth',2)
-                title({['dSRM - double CoM predictor']...
-                    [sprintf('ka1=%1.2g', xTotal_ag_dual_CoM(1)) ' ' sprintf('kv1=%1.2g',xTotal_ag_dual_CoM(2))...
-                    ' ' sprintf('kd1=%1.2g',xTotal_ag_dual_CoM(3)) ' ' sprintf('ka2=%1.2g',xTotal_ag_dual_CoM(5))...
-                    ' ' sprintf('kv1=%1.2g',xTotal_ag_dual_CoM(6)) ' ' sprintf('kd2=%1.2g',xTotal_ag_dual_CoM(7))]})
-                legend('Data','dSRM (CoM)'); ylabel([tag_ag ' EMG']); xlabel('Time (s)');
-                text(-0.4,0.5,sprintf('R^{2} = %1.2g',fitTotal_ag_dual_CoM(1)))
-                text(-0.4,0.3,sprintf('VAF = %1.2g',fitTotal_ag_dual_CoM(2)))
-                % all on same plot
-                ax5 = plotij(1,2,1,2); hold on
-                plot(atime,agonist,'k','LineWidth',2)
-                plot(atime(ind_time),eRecon_ag,'g','LineWidth',2)
-                %             plot(atime(ind_time),eTotalRecon_ag_dual_beta,'r','LineWidth',2)
-                %             plot(atime(ind_time),eTotalRecon_ag_dual_Cz,'b','LineWidth',2)
-                plot(atime(ind_time),eTotalRecon_ag_dual_CoM,'m','LineWidth',2)
-                title('All SRMs'); ylabel([tag_ag ' EMG']); xlabel('Time (s)');
-                %             legend('Data','mSRM','dSRM (beta)','dSRM (Cz)','dSRM (CoM')
-                legend('Data','mSRM','hSRM (CoM')
-                sgtitle([subjID + ' Mag' + num2str(mag) + " direc" + num2str(direction)])
-                
-                %Set ylim to be the same between plots
-                %             ylims = [ax1.YLim ax2.YLim ax3.YLim ax4.YLim];
-                ylims = [ax1.YLim ax4.YLim];
-                yl = max(ylims); yl = [0 yl];
-                set(ax1,'YLim',yl)
-                %             set(ax2,'YLim',yl)
-                %             set(ax3,'YLim',yl)
-                set(ax4,'YLim',yl)
-                set(ax5,'YLim',yl)
-                
-                if savefigopt
-                    saveas(gcf,[figdir + subjID + '_DualSRMCompare_mag' + num2str(mag) + '_direc' + num2str(direction) + '.fig'],'fig')
-                    saveas(gcf,[figdir + subjID + '_DualSRMCompare_mag' + num2str(mag) + '_direc' + num2str(direction) + '.jpg'],'jpg')
-                end
-                
-                %% Plot SRM components
-                % two figures - 1 for mSRM and cSRMs 1 for dSRMs
-                fig_SRMReconComponents_1 = figure(direction+10000); set(fig_SRMReconComponents_1,'WindowState','maximized')
-                %             % cSRM  - Beta
-                %             plotij(3,3,1,yy)
-                %             hold on
-                %             plot(atime(ind_time),eegRecon_beta*dataAv.beta_norm(ind_cond),'k','LineWidth',1);
-                %             %SRM Output
-                %             plot(atime(ind_time)+x_eeg_beta(4), (predictorsTrad_eeg(1,:).*x_eeg_beta(1) + backLev_beta)*dataAv.beta_norm(ind_cond),'r')
-                %             plot(atime(ind_time)+x_eeg_beta(4), (predictorsTrad_eeg(2,:).*x_eeg_beta(2) + backLev_beta)*dataAv.beta_norm(ind_cond),'b')
-                %             plot(atime(ind_time)+x_eeg_beta(4), (predictorsTrad_eeg(3,:).*x_eeg_beta(3) + backLev_beta)*dataAv.beta_norm(ind_cond),'g')
-                %             legend('Recon', 'ka', 'kv', 'kd')
-                %             ylabel(['cSRM  - Beta '])
-                %             title({['Mag = ' num2str(yy) '     \beta Norm = ' num2str(dataAv.beta_norm(ind_cond))]...
-                %                 [sprintf('ka=%1.2g', x_eeg_beta(1)) ' ' sprintf('kv=%1.2g',x_eeg_beta(2)) ' ' sprintf('kd=%1.2g',x_eeg_beta(3))]})
-                %
-                %             if yy == 1
-                %                 tmp3_axis_cSRM_B_mag1 = gca;
-                %                 tmp3_yl_cSRM_B_mag1 = tmp3_axis_cSRM_B_mag1.YLim;
-                %             elseif yy == 2
-                %                 tmp3_axis_cSRM_B_mag2 = gca;
-                %                 tmp3_yl_cSRM_B_mag2 = tmp3_axis_cSRM_B_mag2.YLim;
-                %             elseif yy == 3
-                %                 tmp3_axis_cSRM_B_mag3 = gca;
-                %                 tmp3_yl_cSRM_B_mag3 = tmp3_axis_cSRM_B_mag3.YLim;
-                %
-                %                 tmp3_yl_cSRM_B = [tmp3_yl_cSRM_B_mag1; tmp3_yl_cSRM_B_mag2; tmp3_yl_cSRM_B_mag3];
-                %                 tmp3_yl_cSRM_B = [min(tmp3_yl_cSRM_B(:)) max(tmp3_yl_cSRM_B(:))];
-                %                 set(tmp3_axis_cSRM_B_mag1,'YLim',tmp3_yl_cSRM_B)
-                %                 set(tmp3_axis_cSRM_B_mag2,'YLim',tmp3_yl_cSRM_B)
-                %                 set(tmp3_axis_cSRM_B_mag3,'YLim',tmp3_yl_cSRM_B)
-                %             end
-                %
-                %             % cSRM - Cz
-                %             plotij(3,3,2,yy)
-                %             hold on
-                %             plot(atime(ind_time),-(eegRecon_Cz)*abs(dataAv.N1_amp(ind_cond)),'k','LineWidth',1);
-                %             %SRM Output
-                %             plot(atime(ind_time)+x_eeg_Cz(4), (predictorsTrad_eeg(1,:).*x_eeg_Cz(1))*abs(dataAv.N1_amp(ind_cond)),'r')
-                %             plot(atime(ind_time)+x_eeg_Cz(4), (predictorsTrad_eeg(2,:).*x_eeg_Cz(2))*abs(dataAv.N1_amp(ind_cond)),'b')
-                %             plot(atime(ind_time)+x_eeg_Cz(4), (predictorsTrad_eeg(3,:).*x_eeg_Cz(3))*abs(dataAv.N1_amp(ind_cond)),'g')
-                %             ylabel(['cSRM - Cz '])
-                %             title({['Mag = ' num2str(yy) '     N1 Amp = ' num2str(abs(dataAv.N1_amp(ind_cond)))]...
-                %                 [sprintf('ka=%1.2g', x_eeg_Cz(1)) ' ' sprintf('kv=%1.2g',x_eeg_Cz(2)) ' ' sprintf('kd=%1.2g',x_eeg_Cz(3))]})
-                %
-                %             if yy == 1
-                %                 tmp3_axis_cSRM_Cz_mag1 = gca;
-                %                 tmp3_yl_cSRM_Cz_mag1 = tmp3_axis_cSRM_Cz_mag1.YLim;
-                %             elseif yy == 2
-                %                 tmp3_axis_cSRM_Cz_mag2 = gca;
-                %                 tmp3_yl_cSRM_Cz_mag2 = tmp3_axis_cSRM_Cz_mag2.YLim;
-                %             elseif yy == 3
-                %                 tmp3_axis_cSRM_Cz_mag3 = gca;
-                %                 tmp3_yl_cSRM_Cz_mag3 = tmp3_axis_cSRM_Cz_mag3.YLim;
-                %
-                %                 tmp3_yl_cSRM_B = [tmp3_yl_cSRM_Cz_mag1; tmp3_yl_cSRM_Cz_mag2; tmp3_yl_cSRM_Cz_mag3];
-                %                 tmp3_yl_cSRM_B = [min(tmp3_yl_cSRM_B(:)) max(tmp3_yl_cSRM_B(:))];
-                %                 set(tmp3_axis_cSRM_Cz_mag1,'YLim',tmp3_yl_cSRM_B)
-                %                 set(tmp3_axis_cSRM_Cz_mag2,'YLim',tmp3_yl_cSRM_B)
-                %                 set(tmp3_axis_cSRM_Cz_mag3,'YLim',tmp3_yl_cSRM_B)
-                %             end
-                
-                
-                % mSRM
-                plotij(3,3,3,xx)
-                hold on
-                plot(atime(ind_time),eRecon_ag,'k','LineWidth',1);
-                %SRM Output
-                plot(atime(ind_time)+x_ag(4), (predictorsmSRM(1,:).*x_ag(1)),'r')
-                plot(atime(ind_time)+x_ag(4), (predictorsmSRM(2,:).*x_ag(2)),'b')
-                plot(atime(ind_time)+x_ag(4), (predictorsmSRM(3,:).*x_ag(3)),'g')
-                ylabel(['mSRM']); xlabel('Time (s)')
-                title({['Mag = ' num2str(mag)]...
-                    [sprintf('ka=%1.2g', x_ag(1)) ' ' sprintf('kv=%1.2g',x_ag(2)) ' ' sprintf('kd=%1.2g',x_ag(3))]})
-                
-                if xx == 1
-                    tmp3_axis_mSRM_mag1 = gca;
-                    tmp3_yl_mSRM_mag1 = tmp3_axis_mSRM_mag1.YLim;
-                elseif xx == 2
-                    tmp3_axis_mSRM_mag2 = gca;
-                    tmp3_yl_mSRM_mag2 = tmp3_axis_mSRM_mag2.YLim;
-                elseif xx == 3
-                    tmp3_axis_mSRM_mag3 = gca;
-                    tmp3_yl_mSRM_mag3 = tmp3_axis_mSRM_mag3.YLim;
-                    
-                    tmp3_yl_mSRM = [tmp3_yl_mSRM_mag1; tmp3_yl_mSRM_mag2; tmp3_yl_mSRM_mag3];
-                    tmp3_yl_mSRM = [min(tmp3_yl_mSRM(:)) max(tmp3_yl_mSRM(:))];
-                    set(tmp3_axis_mSRM_mag1,'YLim',tmp3_yl_mSRM)
-                    set(tmp3_axis_mSRM_mag2,'YLim',tmp3_yl_mSRM)
-                    set(tmp3_axis_mSRM_mag3,'YLim',tmp3_yl_mSRM)
-                end
-                
-                % second SRM components figure
-                fig_SRMReconComponents_2 = figure(direction+10000); set(fig_SRMReconComponents_2,'WindowState','maximized')
-                %             % dSRM  (beta)
-                %             plotij(3,3,1,yy); hold on
-                %             plot(atime(ind_time),eTotalRecon_ag_dual_beta,'k','LineWidth',1);
-                %             plot(atime+xTotal_ag_dual_beta(4), a_ag.*xTotal_ag_dual_beta(1),'r')
-                %             plot(atime+xTotal_ag_dual_beta(4), v_ag.*xTotal_ag_dual_beta(2),'b')
-                %             plot(atime+xTotal_ag_dual_beta(4), d_ag.*xTotal_ag_dual_beta(3),'g')
-                %             plot(atime+xTotal_ag_dual_beta(6), beta.*xTotal_ag_dual_beta(5),'m')
-                %
-                %             ylabel(['dSRM (beta)'])
-                %             title({['Mag = ' num2str(yy)]...
-                %                 [sprintf('ka=%1.2g', xTotal_ag_dual_beta(1)) ' ' sprintf('kv=%1.2g',xTotal_ag_dual_beta(2))...
-                %                 ' ' sprintf('kd=%1.2g',xTotal_ag_dual_beta(3)) ' ' sprintf('kb=%1.2g',xTotal_ag_dual_beta(5))]})
-                %             legend('dSRM (beta)', 'ka', 'kv', 'kd','kb')
-                %
-                %             if yy == 1
-                %                 tmp4_axis_dSRM_B_mag1 = gca;
-                %                 tmp4_yl_dSRM_B_mag1 = tmp4_axis_dSRM_B_mag1.YLim;
-                %             elseif yy == 2
-                %                 tmp4_axis_dSRM_B_mag2 = gca;
-                %                 tmp4_yl_dSRM_B_mag2 = tmp4_axis_dSRM_B_mag2.YLim;
-                %             elseif yy == 3
-                %                 tmp4_axis_dSRM_B_mag3 = gca;
-                %                 tmp4_yl_dSRM_B_mag3 = tmp4_axis_dSRM_B_mag3.YLim;
-                %
-                %                 tmp4_yl_dSRM_B = [tmp4_yl_dSRM_B_mag1; tmp4_yl_dSRM_B_mag2; tmp4_yl_dSRM_B_mag3];
-                %                 tmp4_yl_dSRM_B = [min(tmp4_yl_dSRM_B(:)) max(tmp4_yl_dSRM_B(:))];
-                %                 set(tmp4_axis_dSRM_B_mag1,'YLim',tmp4_yl_dSRM_B)
-                %                 set(tmp4_axis_dSRM_B_mag2,'YLim',tmp4_yl_dSRM_B)
-                %                 set(tmp4_axis_dSRM_B_mag3,'YLim',tmp4_yl_dSRM_B)
-                %             end
-                %
-                %             % dSRM  (Cz)
-                %             plotij(3,3,2,yy); hold on
-                %             plot(atime(ind_time),eTotalRecon_ag_dual_Cz,'k','LineWidth',1);
-                %             plot(atime+xTotal_ag_dual_Cz(4), a_ag.*xTotal_ag_dual_Cz(1),'r')
-                %             plot(atime+xTotal_ag_dual_Cz(4), v_ag.*xTotal_ag_dual_Cz(2),'b')
-                %             plot(atime+xTotal_ag_dual_Cz(4), d_ag.*xTotal_ag_dual_Cz(3),'g')
-                %             plot(atime+xTotal_ag_dual_Cz(6), -Cz.*xTotal_ag_dual_Cz(5),'m')
-                %
-                %             ylabel(['dSRM (Cz)'])
-                %             title({['Mag = ' num2str(yy)]...
-                %                 [sprintf('ka=%1.2g', xTotal_ag_dual_Cz(1)) ' ' sprintf('kv=%1.2g',xTotal_ag_dual_Cz(2))...
-                %                 ' ' sprintf('kd=%1.2g',xTotal_ag_dual_Cz(3)) ' ' sprintf('kCz=%1.2g',xTotal_ag_dual_Cz(5))]})
-                %             legend('dSRM (Cz)', 'ka', 'kv', 'kd','kCz')
-                %             %         if norm_emg
-                %             %             ylim(yl_emg)
-                %             %         end
-                %             %         ylim([-0.4 0.4])
-                %             if yy == 1
-                %                 tmp4_axis_dSRM_Cz_mag1 = gca;
-                %                 tmp4_yl_dSRM_Cz_mag1 = tmp4_axis_dSRM_Cz_mag1.YLim;
-                %             elseif yy == 2
-                %                 tmp4_axis_dSRM_Cz_mag2 = gca;
-                %                 tmp4_yl_dSRM_Cz_mag2 = tmp4_axis_dSRM_Cz_mag2.YLim;
-                %             elseif yy == 3
-                %                 tmp4_axis_dSRM_Cz_mag3 = gca;
-                %                 tmp4_yl_dSRM_Cz_mag3 = tmp4_axis_dSRM_Cz_mag3.YLim;
-                %
-                %                 tmp4_yl_dSRM_B = [tmp4_yl_dSRM_Cz_mag1; tmp4_yl_dSRM_Cz_mag2; tmp4_yl_dSRM_Cz_mag3];
-                %                 tmp4_yl_dSRM_B = [min(tmp4_yl_dSRM_B(:)) max(tmp4_yl_dSRM_B(:))];
-                %                 set(tmp4_axis_dSRM_Cz_mag1,'YLim',tmp4_yl_dSRM_B)
-                %                 set(tmp4_axis_dSRM_Cz_mag2,'YLim',tmp4_yl_dSRM_B)
-                %                 set(tmp4_axis_dSRM_Cz_mag3,'YLim',tmp4_yl_dSRM_B)
-                %             end
-                
-                
-                % dSRM  (CoM)
-                plotij(3,3,3,xx); hold on
-                plot(atime(ind_time),eTotalRecon_ag_dual_CoM,'k','LineWidth',1);
-                plot(atime+xTotal_ag_dual_CoM(4), a_ag.*xTotal_ag_dual_CoM(1),'r')
-                plot(atime+xTotal_ag_dual_CoM(4), v_ag.*xTotal_ag_dual_CoM(2),'b')
-                plot(atime+xTotal_ag_dual_CoM(4), d_ag.*xTotal_ag_dual_CoM(3),'g')
-                plot(atime+xTotal_ag_dual_CoM(8), a_ag.*xTotal_ag_dual_CoM(5),'r--')
-                plot(atime+xTotal_ag_dual_CoM(8), v_ag.*xTotal_ag_dual_CoM(6),'b--')
-                plot(atime+xTotal_ag_dual_CoM(8), d_ag.*xTotal_ag_dual_CoM(7),'g--')
-                
-                ylabel(['dSRM (CoM)']); xlabel('Time (s)')
-                title({['Mag = ' num2str(mag)]...
-                    [sprintf('ka1=%1.2g', xTotal_ag_dual_CoM(1)) ' ' sprintf('kv1=%1.2g',xTotal_ag_dual_CoM(2))...
-                    ' ' sprintf('kd1=%1.2g',xTotal_ag_dual_CoM(3)) ' ' sprintf('ka2=%1.2g',xTotal_ag_dual_CoM(5))...
-                    ' ' sprintf('kv2=%1.2g',xTotal_ag_dual_CoM(6)) ' ' sprintf('kd2=%1.2g',xTotal_ag_dual_CoM(7))]})
-                legend('dSRM (CoM)', 'ka1', 'kv1', 'kd1','ka2','kv2','kd2')
-                %         if norm_emg
-                %             ylim(yl_emg)
-                %         end
-                %         ylim([-0.4 0.4])
-                if xx == 1
-                    tmp4_axis_dSRM_CoM_mag1 = gca;
-                    tmp4_yl_dSRM_CoM_mag1 = tmp4_axis_dSRM_CoM_mag1.YLim;
-                elseif xx == 2
-                    tmp4_axis_dSRM_CoM_mag2 = gca;
-                    tmp4_yl_dSRM_CoM_mag2 = tmp4_axis_dSRM_CoM_mag2.YLim;
-                elseif xx == 3
-                    tmp4_axis_dSRM_CoM_mag3 = gca;
-                    tmp4_yl_dSRM_CoM_mag3 = tmp4_axis_dSRM_CoM_mag3.YLim;
-                    
-                    tmp4_yl_dSRM_B = [tmp4_yl_dSRM_CoM_mag1; tmp4_yl_dSRM_CoM_mag2; tmp4_yl_dSRM_CoM_mag3];
-                    tmp4_yl_dSRM_B = [min(tmp4_yl_dSRM_B(:)) max(tmp4_yl_dSRM_B(:))];
-                    set(tmp4_axis_dSRM_CoM_mag1,'YLim',tmp4_yl_dSRM_B)
-                    set(tmp4_axis_dSRM_CoM_mag2,'YLim',tmp4_yl_dSRM_B)
-                    set(tmp4_axis_dSRM_CoM_mag3,'YLim',tmp4_yl_dSRM_B)
-                end
-                
-                % set title
-                sgtitle([subjID + " direc" + num2str(direction)])
-                %% plot Recons and Data
-                XLim = [-0.4 1.2];
-                YLim=[-0.1 1];
-                fig_SRMRecon = figure(direction); set(fig_SRMRecon,'WindowState','maximized')
-                %             % cSRM - Beta
-                %             plotij(6,3,1,yy)
-                %             plot(atime,beta*dataAv.beta_norm(ind_cond),'k','LineWidth',1); hold on
-                %             plot(atime(ind_time),eegRecon_beta*dataAv.beta_norm(ind_cond),'b','LineWidth',1);
-                %             VAF = fit_eeg_beta(2);
-                %             R2 = fit_eeg_beta(1);
-                %             VAFstr = ['VAF = ' sprintf('%0.2f',VAF)];
-                %             R2str = ['R^{2} = ' sprintf('%0.2f',R2)];
-                %             legend('Data', 'Recon')
-                %             title({[sprintf('mag = %1.0f',yy)] [VAFstr ' ' R2str ' ' sprintf('beta Norm = %1.2g',dataAv.beta_norm(ind_cond))]})
-                %             ylabel(['Beta cSRM'])
-                %             % to set the ylims the same across
-                %             if yy == 1
-                %                 tmp_axis_cSRM_B_mag1 = gca;
-                %                 tmp_yl_cSRM_B_mag1 = tmp_axis_cSRM_B_mag1.YLim;
-                %             elseif yy == 2
-                %                 tmp_axis_cSRM_B_mag2 = gca;
-                %                 tmp_yl_cSRM_B_mag2 = tmp_axis_cSRM_B_mag2.YLim;
-                %             elseif yy == 3
-                %                 tmp_axis_cSRM_B_mag3 = gca;
-                %                 tmp_yl_cSRM_B_mag3 = tmp_axis_cSRM_B_mag3.YLim;
-                %
-                %                 tmp_yl_cSRM_B = [tmp_yl_cSRM_B_mag1; tmp_yl_cSRM_B_mag2; tmp_yl_cSRM_B_mag3];
-                %                 tmp_yl_cSRM_B = [min(tmp_yl_cSRM_B(:)) max(tmp_yl_cSRM_B(:))];
-                %                 set(tmp_axis_cSRM_B_mag1,'YLim',tmp_yl_cSRM_B)
-                %                 set(tmp_axis_cSRM_B_mag2,'YLim',tmp_yl_cSRM_B)
-                %                 set(tmp_axis_cSRM_B_mag3,'YLim',tmp_yl_cSRM_B)
-                %             end
-                %
-                %             % cSRM - Cz
-                %             plotij(6,3,2,yy)
-                %             plot(atime,Cz*abs(dataAv.N1_amp(ind_cond)),'k','LineWidth',1); hold on
-                %             plot(atime(ind_time),eegRecon_Cz*abs(dataAv.N1_amp(ind_cond)),'b','LineWidth',1);
-                %             VAF = fit_eeg_Cz(2);
-                %             R2 = fit_eeg_Cz(1);
-                %             VAFstr = ['VAF = ' sprintf('%0.2f',VAF)];
-                %             R2str = ['R^{2} = ' sprintf('%0.2f',R2)];
-                %             title([VAFstr ' ' R2str ' ' sprintf('N1 Amp = %1.2g',abs(dataAv.N1_amp(ind_cond)))])
-                %             ylabel(['Cz cSRM'])
-                %             % to set the ylims the same across
-                %             if yy == 1
-                %                 tmp_axis_cSRM_Cz_mag1 = gca;
-                %                 tmp_yl_cSRM_Cz_mag1 = tmp_axis_cSRM_Cz_mag1.YLim;
-                %             elseif yy == 2
-                %                 tmp_axis_cSRM_Cz_mag2 = gca;
-                %                 tmp_yl_cSRM_Cz_mag2 = tmp_axis_cSRM_Cz_mag2.YLim;
-                %             elseif yy == 3
-                %                 tmp_axis_cSRM_Cz_mag3 = gca;
-                %                 tmp_yl_cSRM_Cz_mag3 = tmp_axis_cSRM_Cz_mag3.YLim;
-                %
-                %                 tmp_yl_cSRM_B = [tmp_yl_cSRM_Cz_mag1; tmp_yl_cSRM_Cz_mag2; tmp_yl_cSRM_Cz_mag3];
-                %                 tmp_yl_cSRM_B = [min(tmp_yl_cSRM_B(:)) max(tmp_yl_cSRM_B(:))];
-                %                 set(tmp_axis_cSRM_Cz_mag1,'YLim',tmp_yl_cSRM_B)
-                %                 set(tmp_axis_cSRM_Cz_mag2,'YLim',tmp_yl_cSRM_B)
-                %                 set(tmp_axis_cSRM_Cz_mag3,'YLim',tmp_yl_cSRM_B)
-                %             end
-                %             %         ylim([-0.1 0.4])
-                %             %         if norm_eeg
-                %             %             ylim(yl_eeg)
-                %             %         end
-                
-                % mSRM
-                plotij(6,3,3,xx)
-                plot(atime,agonist,'k','LineWidth',1); hold on
-                plot(atime(ind_time),eRecon_ag,'b','LineWidth',1);
-                
-                VAF = fit_ag(2); %rsqr_uncentered(ag',eTotalRecon_ag');
-                R2 = fit_ag(1); %rsqr(ag',eTotalRecon_ag');
-                VAFstr = ['VAF = ' sprintf('%0.2f',VAF)];
-                R2str = ['R^{2} = ' sprintf('%0.2f',R2)];
-                title([VAFstr ' ' R2str])
-                ylabel('mSRM')
-                if xx == 1
-                    tmp1_axis_mSRM_mag1 = gca;
-                    tmp1_yl_mSRM_mag1 = tmp1_axis_mSRM_mag1.YLim;
-                elseif xx == 2
-                    tmp1_axis_mSRM_mag2 = gca;
-                    tmp1_yl_mSRM_mag2 = tmp1_axis_mSRM_mag2.YLim;
-                elseif xx == 3
-                    tmp1_axis_mSRM_mag3 = gca;
-                    tmp1_yl_mSRM_mag3 = tmp1_axis_mSRM_mag3.YLim;
-                    
-                    tmp1_yl_mSRM = [tmp1_yl_mSRM_mag1; tmp1_yl_mSRM_mag2; tmp1_yl_mSRM_mag3];
-                    tmp1_yl_mSRM = [min(tmp1_yl_mSRM(:)) max(tmp1_yl_mSRM(:))];
-                    set(tmp1_axis_mSRM_mag1,'YLim',tmp1_yl_mSRM)
-                    set(tmp1_axis_mSRM_mag2,'YLim',tmp1_yl_mSRM)
-                    set(tmp1_axis_mSRM_mag3,'YLim',tmp1_yl_mSRM)
-                end
-                
-                %             % dSRM (Beta)
-                %             plotij(6,3,4,yy)
-                %             plot(atime,agonist,'k','LineWidth',1); hold on
-                %             plot(atime(ind_time),eTotalRecon_ag_dual_beta,'b','LineWidth',1);
-                %
-                %             VAF = fitTotal_ag_dual_beta(2); %rsqr_uncentered(ag',eTotalRecon_ag');
-                %             R2 = fitTotal_ag_dual_beta(1); %rsqr(ag',eTotalRecon_ag');
-                %             VAFstr = ['VAF = ' sprintf('%0.2f',VAF)];
-                %             R2str = ['R^{2} = ' sprintf('%0.2f',R2)];
-                %             title([VAFstr ' ' R2str])
-                %             ylabel('dSRM (Beta)')
-                %             if yy == 1
-                %                 tmp1_axis_dSRM_B_mag1 = gca;
-                %                 tmp1_yl_dSRM_B_mag1 = tmp1_axis_dSRM_B_mag1.YLim;
-                %             elseif yy == 2
-                %                 tmp1_axis_dSRM_B_mag2 = gca;
-                %                 tmp1_yl_dSRM_B_mag2 = tmp1_axis_dSRM_B_mag2.YLim;
-                %             elseif yy == 3
-                %                 tmp1_axis_dSRM_B_mag3 = gca;
-                %                 tmp1_yl_dSRM_B_mag3 = tmp1_axis_dSRM_B_mag3.YLim;
-                %
-                %                 tmp1_yl_dSRM_B = [tmp1_yl_dSRM_B_mag1; tmp1_yl_dSRM_B_mag2; tmp1_yl_dSRM_B_mag3];
-                %                 tmp1_yl_dSRM_B = [min(tmp1_yl_dSRM_B(:)) max(tmp1_yl_dSRM_B(:))];
-                %                 set(tmp1_axis_dSRM_B_mag1,'YLim',tmp1_yl_dSRM_B)
-                %                 set(tmp1_axis_dSRM_B_mag2,'YLim',tmp1_yl_dSRM_B)
-                %                 set(tmp1_axis_dSRM_B_mag3,'YLim',tmp1_yl_dSRM_B)
-                %             end
-                %             %         ylim([-0.1 0.4])
-                %             %         if norm_emg
-                %             %             ylim(yl_emg)
-                %             %         end
-                
-                %             % dSRM (Cz)
-                %             plotij(6,3,5,yy)
-                %             plot(atime,agonist,'k','LineWidth',1); hold on
-                %             plot(atime(ind_time),eTotalRecon_ag_dual_Cz,'b','LineWidth',1);
-                %
-                %             VAF = fitTotal_ag_dual_Cz(2); %rsqr_uncentered(ag',eTotalRecon_ag');
-                %             R2 = fitTotal_ag_dual_Cz(1); %rsqr(ag',eTotalRecon_ag');
-                %             VAFstr = ['VAF = ' sprintf('%0.2f',VAF)];
-                %             R2str = ['R^{2} = ' sprintf('%0.2f',R2)];
-                %             title([VAFstr ' ' R2str])
-                %             ylabel('dSRM (Cz)')
-                %             xlabel('Time (s)')
-                %             if yy == 1
-                %                 tmp1_axis_dSRM_Cz_mag1 = gca;
-                %                 tmp1_yl_dSRM_Cz_mag1 = tmp1_axis_dSRM_Cz_mag1.YLim;
-                %             elseif yy == 2
-                %                 tmp1_axis_dSRM_Cz_mag2 = gca;
-                %                 tmp1_yl_dSRM_Cz_mag2 = tmp1_axis_dSRM_Cz_mag2.YLim;
-                %             elseif yy == 3
-                %                 tmp1_axis_dSRM_Cz_mag3 = gca;
-                %                 tmp1_yl_dSRM_Cz_mag3 = tmp1_axis_dSRM_Cz_mag3.YLim;
-                %
-                %                 tmp1_yl_dSRM_Cz = [tmp1_yl_dSRM_Cz_mag1; tmp1_yl_dSRM_Cz_mag2; tmp1_yl_dSRM_Cz_mag3];
-                %                 tmp1_yl_dSRM_Cz = [min(tmp1_yl_dSRM_Cz(:)) max(tmp1_yl_dSRM_Cz(:))];
-                %                 set(tmp1_axis_dSRM_Cz_mag1,'YLim',tmp1_yl_dSRM_Cz)
-                %                 set(tmp1_axis_dSRM_Cz_mag2,'YLim',tmp1_yl_dSRM_Cz)
-                %                 set(tmp1_axis_dSRM_Cz_mag3,'YLim',tmp1_yl_dSRM_Cz)
-                %             end
-                
-                
-                % dSRM (CoM)
-                plotij(6,3,6,xx)
-                plot(atime,agonist,'k','LineWidth',1); hold on
-                plot(atime(ind_time),eTotalRecon_ag_dual_CoM,'b','LineWidth',1);
-                
-                VAF = fitTotal_ag_dual_CoM(2); %rsqr_uncentered(ag',eTotalRecon_ag');
-                R2 = fitTotal_ag_dual_CoM(1); %rsqr(ag',eTotalRecon_ag');
-                VAFstr = ['VAF = ' sprintf('%0.2f',VAF)];
-                R2str = ['R^{2} = ' sprintf('%0.2f',R2)];
-                title([VAFstr ' ' R2str])
-                ylabel('dSRM (CoM)')
-                xlabel('Time (s)')
-                if xx == 1
-                    tmp1_axis_dSRM_CoM_mag1 = gca;
-                    tmp1_yl_dSRM_CoM_mag1 = tmp1_axis_dSRM_CoM_mag1.YLim;
-                elseif xx == 2
-                    tmp1_axis_dSRM_CoM_mag2 = gca;
-                    tmp1_yl_dSRM_CoM_mag2 = tmp1_axis_dSRM_CoM_mag2.YLim;
-                elseif xx == 3
-                    tmp1_axis_dSRM_CoM_mag3 = gca;
-                    tmp1_yl_dSRM_CoM_mag3 = tmp1_axis_dSRM_CoM_mag3.YLim;
-                    
-                    tmp1_yl_dSRM_CoM = [tmp1_yl_dSRM_CoM_mag1; tmp1_yl_dSRM_CoM_mag2; tmp1_yl_dSRM_CoM_mag3];
-                    tmp1_yl_dSRM_CoM = [min(tmp1_yl_dSRM_CoM(:)) max(tmp1_yl_dSRM_CoM(:))];
-                    set(tmp1_axis_dSRM_CoM_mag1,'YLim',tmp1_yl_dSRM_CoM)
-                    set(tmp1_axis_dSRM_CoM_mag2,'YLim',tmp1_yl_dSRM_CoM)
-                    set(tmp1_axis_dSRM_CoM_mag3,'YLim',tmp1_yl_dSRM_CoM)
-                end
-                
-                %title
-                sgtitle([subjID + " direc" + num2str(direction)])
-            end
             
             %% Put SRM Outputs into dataAv
-            dataAv.Ag_Gains(ind_cond,:) = x_ag;
-            dataAv.Antag_Gains(ind_cond,:) = xTotal_an;
-            %             dataAv.Beta_Gains(ind_cond,:) = x_eeg_beta;
-            %             dataAv.BetaRecon(ind_cond,:) = eegRecon_beta;
-            dataAv.AgonistRecon(ind_cond,:) = eRecon_ag;
-            dataAv.AntagonistRecon(ind_cond,:) = eTotalRecon_antag;
-            %             dataAv.fit_beta(ind_cond,:) = fit_eeg_beta;
+            dataAv.Gains_Ag(ind_cond,:) = x_ag;
+            dataAv.Gains_Antag(ind_cond,:) = xTotal_an;
+            dataAv.Gains_Beta(ind_cond,:) = x_eeg_beta;
+            dataAv.Recon_Beta(ind_cond,:) = eegRecon_beta;
+            dataAv.Recon_Agonist(ind_cond,:) = eRecon_ag;
+            dataAv.Recon_Antagonist(ind_cond,:) = eTotalRecon_antag;
+            dataAv.fit_beta(ind_cond,:) = fit_eeg_beta;
             dataAv.fit_agonist(ind_cond,:) = fit_ag;
             dataAv.fit_antagonist(ind_cond,:) = fitTotal_an;
             
-            %             dataAv.Cz_Gains(ind_cond,:) = x_eeg_Cz;
-            %             dataAv.CzRecon(ind_cond,:) = eegRecon_Cz;
-            %             dataAv.fit_Cz(ind_cond,:) = fit_eeg_Cz;
+            dataAv.Gains_Cz(ind_cond,:) = x_eeg_Cz;
+            dataAv.Recon_Cz(ind_cond,:) = eegRecon_Cz;
+            dataAv.fit_Cz(ind_cond,:) = fit_eeg_Cz;
             
             %DualSRM outputs (beta predictor)
-            %             dataAv.Ag_Gains_Dual_beta(ind_cond,:) = x_ag_dual;
-            %             dataAv.Ag_Gains_TotalDual_beta(ind_cond,:) = xTotal_ag_dual_beta;
-            %             dataAv.AgonistRecon_Dual_beta(ind_cond,:) = eRecon_ag_dual;
-            %             dataAv.AgonistRecon_TotalDual_beta(ind_cond,:) = eTotalRecon_ag_dual_beta;
-            %             dataAv.fit_agonist_Dual_beta(ind_cond,:) = fit_ag_dual;
-            %             dataAv.fit_agonist_TotalDual_beta(ind_cond,:) = fitTotal_ag_dual_beta;
+            dataAv.Gains_Ag_TotalDual_beta(ind_cond,:) = xTotal_ag_dual_beta;
+            dataAv.Recon_Agonist_TotalDual_beta(ind_cond,:) = eTotalRecon_ag_dual_beta;
+            dataAv.fit_agonist_TotalDual_beta(ind_cond,:) = fitTotal_ag_dual_beta;
             
             %ResidualSRM outputs (Beta)
-            %             dataAv.Residual(ind_cond,:) = residual;
-            %             dataAv.Residual_Gains_beta(ind_cond,:) = x_residual_beta;
-            %             dataAv.ResidualRecon_beta(ind_cond,:) = eRecon_residual_beta;
-            %             dataAv.fit_residual_beta(ind_cond,:) = fit_residual_beta;
+            dataAv.Residual(ind_cond,:) = residual;
+            dataAv.Gains_Residual_beta(ind_cond,:) = x_residual_beta;
+            dataAv.Recon_Residual_beta(ind_cond,:) = eRecon_residual_beta;
+            dataAv.fit_residual_beta(ind_cond,:) = fit_residual_beta;
             
             %DualSRM outputs (Cz predictor)
-            %             dataAv.Ag_Gains_TotalDual_Cz(ind_cond,:) = xTotal_ag_dual_Cz;
-            %             dataAv.AgonistRecon_TotalDual_Cz(ind_cond,:) = eTotalRecon_ag_dual_Cz;
-            %             dataAv.fit_agonist_TotalDual_Cz(ind_cond,:) = fitTotal_ag_dual_Cz;
+            dataAv.Gains_Ag_TotalDual_Cz(ind_cond,:) = xTotal_ag_dual_Cz;
+            dataAv.Recon_Agonist_TotalDual_Cz(ind_cond,:) = eTotalRecon_ag_dual_Cz;
+            dataAv.fit_agonist_TotalDual_Cz(ind_cond,:) = fitTotal_ag_dual_Cz;
             
             %ResidualSRM outputs (Cz)
-            %             dataAv.Residual_Gains_Cz(ind_cond,:) = x_residual_Cz;
-            %             dataAv.ResidualRecon_Cz(ind_cond,:) = eRecon_residual_Cz;
-            %             dataAv.fit_residual_Cz(ind_cond,:) = fit_residual_Cz;
+            dataAv.Gains_Residual_Cz(ind_cond,:) = x_residual_Cz;
+            dataAv.Recon_Residual_Cz(ind_cond,:) = eRecon_residual_Cz;
+            dataAv.fit_residual_Cz(ind_cond,:) = fit_residual_Cz;
             
             %DualSRM outputs (CoM)
-            dataAv.Ag_Gains_TotalDual_CoM(ind_cond,:) = xTotal_ag_dual_CoM;
-            dataAv.AgonistRecon_TotalDual_CoM(ind_cond,:) = eTotalRecon_ag_dual_CoM;
+            dataAv.Gains_Ag_TotalDual_CoM(ind_cond,:) = xTotal_ag_dual_CoM;
+            dataAv.Recon_Agonist_TotalDual_CoM(ind_cond,:) = eTotalRecon_ag_dual_CoM;
             dataAv.fit_agonist_TotalDual_CoM(ind_cond,:) = fitTotal_ag_dual_CoM;
             
             %ResidualSRM outputs (CoM)
-            dataAv.Residual_Gains_CoM(ind_cond,:) = x_residual_CoM;
-            dataAv.ResidualRecon_CoM(ind_cond,:) = eRecon_residual_CoM;
+            dataAv.Gains_Residual_CoM(ind_cond,:) = x_residual_CoM;
+            dataAv.Recon_Residual_CoM(ind_cond,:) = eRecon_residual_CoM;
             dataAv.fit_residual_CoM(ind_cond,:) = fit_residual_CoM;
             
-            
-            %% Save SRM Figures
-            if savefigopt & ~loopbreak
-                % SRM Recon vs Raw data
-                saveas(fig_SRMRecon, [figdir + subjID + '_SRMRecon_direc' + num2str(direction) + '.fig'],'fig')
-                saveas(fig_SRMRecon, [figdir + subjID + '_SRMRecon_direc' + num2str(direction) + '.jpg'],'jpg')
-                % SRM Components
-                saveas(fig_SRMReconComponents_1,[figdir + subjID + '_SRMReconComps_direc' + num2str(direction) + '.fig'],'fig')
-                saveas(fig_SRMReconComponents_1,[figdir + subjID + '_SRMReconComps_direc' + num2str(direction) + '.jpg'],'jpg')
-                
-                saveas(fig_SRMReconComponents_2,[figdir + subjID + '_SRMReconComps_dSRMs_direc' + num2str(direction) + '.fig'],'fig')
-                saveas(fig_SRMReconComponents_2,[figdir + subjID + '_SRMReconComps_dSRMs_direc' + num2str(direction) + '.jpg'],'jpg')
-            end
         end % direction loop
         if ~loopbreak
             close all

@@ -26,7 +26,7 @@ for i = 1:size(files,1)
     folder = files(i).folder;
     EEG = pop_loadset('filename',filename,'filepath',folder);
     [ALLEEG, EEG, CURRENTSET] = eeg_store( ALLEEG, EEG, i );
-    EEG = eeg_checkset( EEG );    
+    EEG = eeg_checkset( EEG );
     
     %% perform time-frequency analysis
     figure;
@@ -42,7 +42,7 @@ for i = 1:size(files,1)
     %ERP: needs to trial average (don't for ERSP)
     temp_Cz = EEG.data(13,:,:); temp_Cz = squeeze(temp_Cz);
     Cz = [Cz; mean(temp_Cz,2)'];
-    time_erp = [time_erp; EEG.times]; 
+    time_erp = [time_erp; EEG.times];
     % ERSP
     % create frequency indexes
     ind_theta = find(frequencies >= 4 & frequencies < 8);
@@ -50,10 +50,10 @@ for i = 1:size(files,1)
     ind_beta =  find(frequencies >= 13 & frequencies < 30);
     ind_gamma = find(frequencies > 30);
     
-    theta_ersp = [theta_ersp; mean(ersp(ind_theta,:),1)]; 
+    theta_ersp = [theta_ersp; mean(ersp(ind_theta,:),1)];
     alpha_ersp = [alpha_ersp; mean(ersp(ind_alpha,:),1)];
-    beta_ersp = [beta_ersp; mean(ersp(ind_beta,:),1)]; 
-    gamma_ersp = [gamma_ersp; mean(ersp(ind_gamma,:),1)]; 
+    beta_ersp = [beta_ersp; mean(ersp(ind_beta,:),1)];
+    gamma_ersp = [gamma_ersp; mean(ersp(ind_gamma,:),1)];
     time_ersp = [time_ersp; times_ersp];
     
     % create condition index from file name to ensure proper concatination w/ createfitsData.m output
@@ -65,9 +65,34 @@ for i = 1:size(files,1)
     close all
     
 end
-%% create data table of EEG output measures
-T = table(ID, mag, direc, Cz,  beta_ersp,  gamma_ersp,  theta_ersp,  alpha_ersp, time_erp,  time_ersp,  mag,  direc)  
-%% load createfitsData.m output
+%% Concatinate data tables
+% create data table of EEG output measures
+T = table(ID, mag, direc, Cz,  beta_ersp,  gamma_ersp,  theta_ersp,  alpha_ersp, time_erp,  time_ersp);
+% save eeg table 
+save(['D:\Users\SBOEBIN\Documents\MATLAB\Post creatfitsData Output\HOA_PD_EEGDataTable_' date '.mat'],'T')
+% load createfitsData.m output
 load('D:\Users\SBOEBIN\Documents\MATLAB\Post creatfitsData Output\HOA_PD_DataTables_05-Oct-2023.mat')
+dataAv = renamevars(dataAv, 'condition', 'pert_mag'); %rename condition to pert_mag for easier use in future
 
+%%% remove participants/conditions that are not shared between tables %%%
+% HOA19 and HOA20 have 4 perturbation magnitudes for a pilot - remove these trials before concatinating
+ind_delete = dataAv.pert_mag == 12;
+dataAv(ind_delete,:) = [];
+% EEG data includes HOA01 and should not due to protocol change - remove
+ind_delete = strcmp(T.ID,"HOA01");
+T(ind_delete,:) = [];
+% EEG data includes PD01 and should not due to protocol change - remove
+ind_delete = strcmp(T.ID,"PD01");
+T(ind_delete,:) = [];
+% dataAv includes HOA10 who is excluded from EEG analysis - remove
+ind_delete = strcmp(dataAv.patient, "HOA10");
+dataAv(ind_delete,:) = [];
+% dataAv includes PD16 who is excluded from EEG analysis due to no platform accelerometer - remove
+ind_delete = strcmp(dataAv.patient, "PD16");
+dataAv(ind_delete,:) = [];
 
+% concatinate EEG table to vicon output table
+dataAv = [dataAv T];
+
+%% save output
+save(['D:\Users\SBOEBIN\Documents\MATLAB\Post creatfitsData Output\HOA_PD_DataTables_' date '.mat'],'dataAv','data','dataSD','participants','-v7.3')

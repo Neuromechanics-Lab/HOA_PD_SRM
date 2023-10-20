@@ -1,273 +1,274 @@
+%% Script to create output measures for analysis and add to dataAv
 clear; close all; clc
-addpath('C:\Users\seboe\OneDrive - Emory University\Documents\Grad School\Neuromechanics Lab\SRM\matlabUtilities-master')
-fdir = 'C:\Users\seboe\OneDrive - Emory University\Documents\Grad School\Neuromechanics Lab\SRM\Data\SRM Analysis\savedfigs';
-savefigopt = 1;
-analysisdate = '16-Nov-2021';
-
 % load data
-load(['C:\Users\seboe\OneDrive - Emory University\Documents\Grad School\Neuromechanics Lab\SRM\Data\Beta Analysis\HOA_Beta_' analysisdate '.mat'])
-HOA_dataTable_trial = dataTable_trial;
-HOA_dataTable_trialavg = dataTable_trialavg;
+fdir = 'X:\ting\shared_ting\Scott\HOA_PD SRM\';
+savedir = 'X:\ting\shared_ting\Scott\HOA_PD SRM\';
+load([fdir 'HOA_PD_SRM_Outputs_18-Oct-2023.mat'])
+addpath('D:\Users\SBOEBIN\Documents\MATLAB\matlabUtilities-master')
 
-load(['C:\Users\seboe\OneDrive - Emory University\Documents\Grad School\Neuromechanics Lab\SRM\Data\Beta Analysis\PD_Beta_' analysisdate '.mat'])
-PD_dataTable_trial = dataTable_trial;
-PD_dataTable_trialavg = dataTable_trialavg;
+savefigopt = true;
+figdir = 'X:\ting\shared_ting\Scott\HOA_PD SRM\savedfigs\';
+%% create time indexes
+ind_50_150  = create_ind(0.05,0.15,dataAv.atime(1,:));
+ind_100_200 = create_ind(0.10,0.20,dataAv.atime(1,:));
+ind_150_250 = create_ind(0.15,0.25,dataAv.atime(1,:));
+ind_200_300 = create_ind(0.20,0.30,dataAv.atime(1,:));
+ind_250_350 = create_ind(0.25,0.35,dataAv.atime(1,:));
+ind_300_400 = create_ind(0.30,0.40,dataAv.atime(1,:));
+ind_350_450 = create_ind(0.35,0.45,dataAv.atime(1,:));
+ind_400_500 = create_ind(0.40,0.50,dataAv.atime(1,:));
 
-clear dataTable_trial dataTable_trialavg
-PD_dataTable_trial.group = string(PD_dataTable_trial.group);
-HOA_dataTable_trial.group = string(HOA_dataTable_trial.group);
-dataTable_trial = [HOA_dataTable_trial; PD_dataTable_trial];
+%% initialize output variables
+%beta
+beta_50_150  = nan(size(dataAv.pert_mag));
+beta_100_200 = nan(size(dataAv.pert_mag));
+beta_150_250 = nan(size(dataAv.pert_mag));
+beta_200_300 = nan(size(dataAv.pert_mag));
+beta_250_350 = nan(size(dataAv.pert_mag));
+beta_300_400 = nan(size(dataAv.pert_mag));
+beta_350_450 = nan(size(dataAv.pert_mag));
+beta_400_500 = nan(size(dataAv.pert_mag));
+%N1
+N1_amp = nan(size(dataAv.pert_mag));
+N1_latency = nan(size(dataAv.pert_mag));
+% EMG_MGAS_R
+EMG_MGAS_R_norm_50_150  = nan(size(dataAv.pert_mag));
+EMG_MGAS_R_norm_100_200 = nan(size(dataAv.pert_mag));
+EMG_MGAS_R_norm_150_250 = nan(size(dataAv.pert_mag));
+EMG_MGAS_R_norm_200_300 = nan(size(dataAv.pert_mag));
+EMG_MGAS_R_norm_250_350 = nan(size(dataAv.pert_mag));
+EMG_MGAS_R_norm_300_400 = nan(size(dataAv.pert_mag));
+EMG_MGAS_R_norm_350_450 = nan(size(dataAv.pert_mag));
+EMG_MGAS_R_norm_400_500 = nan(size(dataAv.pert_mag));
+%EMG_MGAS_L
+EMG_MGAS_L_norm_50_150  = nan(size(dataAv.pert_mag));
+EMG_MGAS_L_norm_100_200 = nan(size(dataAv.pert_mag));
+EMG_MGAS_L_norm_150_250 = nan(size(dataAv.pert_mag));
+EMG_MGAS_L_norm_200_300 = nan(size(dataAv.pert_mag));
+EMG_MGAS_L_norm_250_350 = nan(size(dataAv.pert_mag));
+EMG_MGAS_L_norm_300_400 = nan(size(dataAv.pert_mag));
+EMG_MGAS_L_norm_350_450 = nan(size(dataAv.pert_mag));
+EMG_MGAS_L_norm_400_500 = nan(size(dataAv.pert_mag));
+% EMG_SOL_R
+EMG_SOL_R_norm_50_150  = nan(size(dataAv.pert_mag));
+EMG_SOL_R_norm_100_200 = nan(size(dataAv.pert_mag));
+EMG_SOL_R_norm_150_250 = nan(size(dataAv.pert_mag));
+EMG_SOL_R_norm_200_300 = nan(size(dataAv.pert_mag));
+EMG_SOL_R_norm_250_350 = nan(size(dataAv.pert_mag));
+EMG_SOL_R_norm_300_400 = nan(size(dataAv.pert_mag));
+EMG_SOL_R_norm_350_450 = nan(size(dataAv.pert_mag));
+EMG_SOL_R_norm_400_500 = nan(size(dataAv.pert_mag));
+%EMG_SOL_L
+EMG_SOL_L_norm_50_150  = nan(size(dataAv.pert_mag));
+EMG_SOL_L_norm_100_200 = nan(size(dataAv.pert_mag));
+EMG_SOL_L_norm_150_250 = nan(size(dataAv.pert_mag));
+EMG_SOL_L_norm_200_300 = nan(size(dataAv.pert_mag));
+EMG_SOL_L_norm_250_350 = nan(size(dataAv.pert_mag));
+EMG_SOL_L_norm_300_400 = nan(size(dataAv.pert_mag));
+EMG_SOL_L_norm_350_450 = nan(size(dataAv.pert_mag));
+EMG_SOL_L_norm_400_500 = nan(size(dataAv.pert_mag));
+%EMG_TA_L
+EMG_TA_L_norm_50_150  = nan(size(dataAv.pert_mag));
+EMG_TA_L_norm_100_200 = nan(size(dataAv.pert_mag));
+EMG_TA_L_norm_150_250 = nan(size(dataAv.pert_mag));
+EMG_TA_L_norm_200_300 = nan(size(dataAv.pert_mag));
+EMG_TA_L_norm_250_350 = nan(size(dataAv.pert_mag));
+EMG_TA_L_norm_300_400 = nan(size(dataAv.pert_mag));
+EMG_TA_L_norm_350_450 = nan(size(dataAv.pert_mag));
+EMG_TA_L_norm_400_500 = nan(size(dataAv.pert_mag));
+%EMG_TA_R
+EMG_TA_R_norm_50_150  = nan(size(dataAv.pert_mag));
+EMG_TA_R_norm_100_200 = nan(size(dataAv.pert_mag));
+EMG_TA_R_norm_150_250 = nan(size(dataAv.pert_mag));
+EMG_TA_R_norm_200_300 = nan(size(dataAv.pert_mag));
+EMG_TA_R_norm_250_350 = nan(size(dataAv.pert_mag));
+EMG_TA_R_norm_300_400 = nan(size(dataAv.pert_mag));
+EMG_TA_R_norm_350_450 = nan(size(dataAv.pert_mag));
+EMG_TA_R_norm_400_500 = nan(size(dataAv.pert_mag));
+%Specificity
+EMG_TA_R_specificity_early = nan(size(dataAv.pert_mag));
+EMG_TA_L_specificity_early = nan(size(dataAv.pert_mag));
+EMG_SOL_R_specificity_early = nan(size(dataAv.pert_mag));
+EMG_SOL_L_specificity_early = nan(size(dataAv.pert_mag));
 
-PD_dataTable_trialavg.group = string(PD_dataTable_trialavg.group);
-HOA_dataTable_trialavg.group = string(HOA_dataTable_trialavg.group);
-dataTable_trialavg = [HOA_dataTable_trialavg; PD_dataTable_trialavg];
-
-load('C:\Users\seboe\OneDrive - Emory University\Documents\Grad School\Neuromechanics Lab\SRM\SRM_Gio\SRMFits_12-Oct-2021.mat');
-%index just PD
-ind_PD = unique(SRMFits.patient);
-ind_PD = ind_PD(20:end);
-
-SRMFits.group(ismember(SRMFits.patient,ind_PD),:) = 1;
-
-PD_HOA_table = readtable('C:\Users\seboe\OneDrive - Emory University\Documents\Grad School\Neuromechanics Lab\SRM\Data\HOA\PD_HOA_Summary.xlsx');
-
-z = PD_HOA_table.z(PD_HOA_table.PD ==1 | PD_HOA_table.PD ==0);
-minibest = PD_HOA_table.minibest(PD_HOA_table.PD ==1 | PD_HOA_table.PD ==0);
-idx_grp = [0 1];
-idx_group = ["0","1"];
-%%
-yl = [0 1]; ylim(yl)
-for i = 1:length(idx_grp)
-    grp = idx_grp(i);
-    group = idx_group(i);
-    %% Plot SRM Recon Accuracy against beta_0_500
-    figure; set(gcf,'WindowState','maximized')
-    plotij(3,2,1,1)
-    plot(dataTable_trialavg.avg_beta_0_500(dataTable_trialavg.group == group & dataTable_trialavg.direc == 90 & dataTable_trialavg.mag == 1),...
-        SRMFits.fit(SRMFits.mus == "beta_norm" & SRMFits.group == grp & SRMFits.pertdir == 90 & SRMFits.pertmagn == "L"),'go','MarkerFaceColor','g')
-    ylabel('Beta Recon R2');xlabel('Beta 0-500ms')
-    title('Forward Low Mag'); ylim(yl)
-    
-    plotij(3,2,1,2)
-    plot(dataTable_trialavg.avg_beta_0_500(dataTable_trialavg.group == group & dataTable_trialavg.direc == 270 & dataTable_trialavg.mag == 1),...
-        SRMFits.fit(SRMFits.mus == "beta_norm" & SRMFits.group == grp & SRMFits.pertdir == 270 & SRMFits.pertmagn == "L"),'go','MarkerFaceColor','g')
-    ylabel('Beta Recon R2');xlabel('Beta 0-500ms')
-    title('Backward Low Mag'); ylim(yl)
-    
-    plotij(3,2,2,1)
-    plot(dataTable_trialavg.avg_beta_0_500(dataTable_trialavg.group == group & dataTable_trialavg.direc == 90 & dataTable_trialavg.mag == 2),...
-        SRMFits.fit(SRMFits.mus == "beta_norm" & SRMFits.group == grp & SRMFits.pertdir == 90 & SRMFits.pertmagn == "M"),'bo','MarkerFaceColor','b')
-    ylabel('Beta Recon R2');xlabel('Beta 0-500ms')
-    title('Forward Med Mag'); ylim(yl)
-    
-    plotij(3,2,2,2)
-    plot(dataTable_trialavg.avg_beta_0_500(dataTable_trialavg.group == group & dataTable_trialavg.direc == 270 & dataTable_trialavg.mag == 2),...
-        SRMFits.fit(SRMFits.mus == "beta_norm" & SRMFits.group == grp & SRMFits.pertdir == 270 & SRMFits.pertmagn == "M"),'bo','MarkerFaceColor','b')
-    ylabel('Beta Recon R2');xlabel('Beta 0-500ms')
-    title('Backward Med Mag'); ylim(yl)
-    
-    plotij(3,2,3,1)
-    plot(dataTable_trialavg.avg_beta_0_500(dataTable_trialavg.group == group & dataTable_trialavg.direc == 90 & dataTable_trialavg.mag == 3),...
-        SRMFits.fit(SRMFits.mus == "beta_norm" & SRMFits.group == grp & SRMFits.pertdir == 90 & SRMFits.pertmagn == "H"),'ro','MarkerFaceColor','r')
-    ylabel('Beta Recon R2');xlabel('Beta 0-500ms')
-    title('Forward High Mag'); ylim(yl)
-    
-    plotij(3,2,3,2)
-    plot(dataTable_trialavg.avg_beta_0_500(dataTable_trialavg.group == group & dataTable_trialavg.direc == 270 & dataTable_trialavg.mag == 3),...
-        SRMFits.fit(SRMFits.mus == "beta_norm" & SRMFits.group == grp & SRMFits.pertdir == 270 & SRMFits.pertmagn == "H"),'ro','MarkerFaceColor','r')
-    ylabel('Beta Recon R2');xlabel('Beta 0-500ms')
-    title('Backward High Mag'); ylim(yl)
-    
-    if grp == 1
-        sgtitle('PD Beta Recon vs Evoked Beta (0-500ms)')
-        if savefigopt == 1
-            saveas(gcf,[fdir '\PD Beta R2 vs beta_0_500_indv cond.fig'],'fig')
-            saveas(gcf,[fdir '\PD Beta R2 vs beta_0_500_indv cond.jpg'],'jpg')
-            print([fdir '\PD Beta R2 vs beta_0_500_indv cond.eps'], '-depsc','-painters')
-        end
-    elseif grp == 0
-        sgtitle('HOA Beta Recon vs Evoked Beta (0-500ms)')
-        if savefigopt == 1
-            saveas(gcf,[fdir '\HOA Beta R2 vs beta_0_500_indv cond.fig'],'fig')
-            saveas(gcf,[fdir '\HOA Beta R2 vs beta_0_500_indv cond.jpg'],'jpg')
-            print([fdir '\HOA Beta R2 vs beta_0_500_indv cond.eps'], '-depsc','-painters')
-        end
-    end
-    %% Plot Beta 0-400 vs SRM beta recon
-    figure; set(gcf,'WindowState','maximized')
-    plotij(1,2,1,1); hold on
-    plot(dataTable_trialavg.avg_beta_0_500(dataTable_trialavg.group == group & dataTable_trialavg.direc == 90 & dataTable_trialavg.mag == 1),...
-        SRMFits.fit(SRMFits.mus == "beta_norm" & SRMFits.group == grp & SRMFits.pertdir == 90 & SRMFits.pertmagn == "L"),'go','MarkerFaceColor','g')
-    plot(dataTable_trialavg.avg_beta_0_500(dataTable_trialavg.group == group & dataTable_trialavg.direc == 90 & dataTable_trialavg.mag == 2),...
-        SRMFits.fit(SRMFits.mus == "beta_norm" & SRMFits.group == grp & SRMFits.pertdir == 90 & SRMFits.pertmagn == "M"),'bo','MarkerFaceColor','b')
-    plot(dataTable_trialavg.avg_beta_0_500(dataTable_trialavg.group == group & dataTable_trialavg.direc == 90 & dataTable_trialavg.mag == 3),...
-        SRMFits.fit(SRMFits.mus == "beta_norm" & SRMFits.group == grp & SRMFits.pertdir == 90 & SRMFits.pertmagn == "H"),'ro','MarkerFaceColor','r')
-    
-    lm_beta_0_500_BetaR2_F = fitlm([dataTable_trialavg.avg_beta_0_500(dataTable_trialavg.group == group & dataTable_trialavg.direc == 90 & dataTable_trialavg.mag == 1);...
-        dataTable_trialavg.avg_beta_0_500(dataTable_trialavg.group == group & dataTable_trialavg.direc == 90 & dataTable_trialavg.mag == 2);...
-        dataTable_trialavg.avg_beta_0_500(dataTable_trialavg.group == group & dataTable_trialavg.direc == 90 & dataTable_trialavg.mag == 3)],...
-        [SRMFits.fit(SRMFits.mus == "beta_norm" & SRMFits.group == grp & SRMFits.pertdir == 90 & SRMFits.pertmagn == "L");...
-        SRMFits.fit(SRMFits.mus == "beta_norm" & SRMFits.group == grp & SRMFits.pertdir == 90 & SRMFits.pertmagn == "M");...
-        SRMFits.fit(SRMFits.mus == "beta_norm" & SRMFits.group == grp & SRMFits.pertdir == 90 & SRMFits.pertmagn == "H")]);
-    plot(lm_beta_0_500_BetaR2_F,'Marker','none')
-    
-    ylabel('Beta Recon R2');xlabel('Beta 0-500ms'); legend('off'); ylim(yl)
-    title({['Forward All Mags'];...
-        ['R2 = ' num2str(lm_beta_0_500_BetaR2_F.Rsquared.Adjusted) '     p = ' num2str(lm_beta_0_500_BetaR2_F.Coefficients.pValue(2))]})
-    
-    plotij(1,2,1,2); hold on
-    plot(dataTable_trialavg.avg_beta_0_500(dataTable_trialavg.group == group & dataTable_trialavg.direc == 270 & dataTable_trialavg.mag == 1),...
-        SRMFits.fit(SRMFits.mus == "beta_norm" & SRMFits.group == grp & SRMFits.pertdir == 270 & SRMFits.pertmagn == "L"),'go','MarkerFaceColor','g')
-    plot(dataTable_trialavg.avg_beta_0_500(dataTable_trialavg.group == group & dataTable_trialavg.direc == 270 & dataTable_trialavg.mag == 2),...
-        SRMFits.fit(SRMFits.mus == "beta_norm" & SRMFits.group == grp & SRMFits.pertdir == 270 & SRMFits.pertmagn == "M"),'bo','MarkerFaceColor','b')
-    plot(dataTable_trialavg.avg_beta_0_500(dataTable_trialavg.group == group & dataTable_trialavg.direc == 270 & dataTable_trialavg.mag == 3),...
-        SRMFits.fit(SRMFits.mus == "beta_norm" & SRMFits.group == grp & SRMFits.pertdir == 270 & SRMFits.pertmagn == "H"),'ro','MarkerFaceColor','r')
-    
-    lm_beta_0_500_BetaR2_B = fitlm([dataTable_trialavg.avg_beta_0_500(dataTable_trialavg.group == group & dataTable_trialavg.direc == 270 & dataTable_trialavg.mag == 1);...
-        dataTable_trialavg.avg_beta_0_500(dataTable_trialavg.group == group & dataTable_trialavg.direc == 270 & dataTable_trialavg.mag == 2);...
-        dataTable_trialavg.avg_beta_0_500(dataTable_trialavg.group == group & dataTable_trialavg.direc == 270 & dataTable_trialavg.mag == 3)],...
-        [SRMFits.fit(SRMFits.mus == "beta_norm" & SRMFits.group == grp & SRMFits.pertdir == 270 & SRMFits.pertmagn == "L");...
-        SRMFits.fit(SRMFits.mus == "beta_norm" & SRMFits.group == grp & SRMFits.pertdir == 270 & SRMFits.pertmagn == "M");...
-        SRMFits.fit(SRMFits.mus == "beta_norm" & SRMFits.group == grp & SRMFits.pertdir == 270 & SRMFits.pertmagn == "H")]);
-    plot(lm_beta_0_500_BetaR2_B,'Marker','none')
-    
-    ylabel('Beta Recon R2');xlabel('Beta 0-500ms'); ylim(yl)
-    title({['Backward All Mags'];...
-        ['R2 = ' num2str(lm_beta_0_500_BetaR2_B.Rsquared.Adjusted) '     p = ' num2str(lm_beta_0_500_BetaR2_B.Coefficients.pValue(2))]})
-    legend('L','M','H')
-    
-    if grp == 1
-        sgtitle('PD Beta Recon vs Evoked Beta (0-500ms)')
-        if savefigopt == 1
-            saveas(gcf,[fdir '\PD Beta R2 vs beta_0_500.fig'],'fig')
-            saveas(gcf,[fdir '\PD Beta R2 vs beta_0_500.jpg'],'jpg')
-            print([fdir '\PD Beta R2 vs beta_0_500.eps'], '-depsc','-painters')
-        end
-    elseif grp == 0
-        sgtitle('HOA Beta Recon vs Evoked Beta (0-500ms)')
-        if savefigopt == 1
-            saveas(gcf,[fdir '\HOA Beta R2 vs beta_0_500.fig'],'fig')
-            saveas(gcf,[fdir '\HOA Beta R2 vs beta_0_500.jpg'],'jpg')
-            print([fdir '\HOA Beta R2 vs beta_0_500.eps'], '-depsc','-painters')
-        end
-    end
-    %% Plot Beta TA_EMG vs SRM beta recon
-    figure; set(gcf,'WindowState','maximized')
-    plotij(1,2,1,1); hold on
-    plot(dataTable_trialavg.avg_beta_0_500(dataTable_trialavg.group == group & dataTable_trialavg.direc == 90 & dataTable_trialavg.mag == 1),...
-        SRMFits.fit(SRMFits.mus == "TA" & SRMFits.group == grp & SRMFits.pertdir == 90 & SRMFits.pertmagn == "L" & SRMFits.side == "L"),'go','MarkerFaceColor','g')
-    plot(dataTable_trialavg.avg_beta_0_500(dataTable_trialavg.group == group & dataTable_trialavg.direc == 90 & dataTable_trialavg.mag == 2),...
-        SRMFits.fit(SRMFits.mus == "TA" & SRMFits.group == grp & SRMFits.pertdir == 90 & SRMFits.pertmagn == "M" & SRMFits.side == "L"),'bo','MarkerFaceColor','b')
-    plot(dataTable_trialavg.avg_beta_0_500(dataTable_trialavg.group == group & dataTable_trialavg.direc == 90 & dataTable_trialavg.mag == 3),...
-        SRMFits.fit(SRMFits.mus == "TA" & SRMFits.group == grp & SRMFits.pertdir == 90 & SRMFits.pertmagn == "H" & SRMFits.side == "L"),'ro','MarkerFaceColor','r')
-    
-    lm_beta_0_500_TAR2_F = fitlm([dataTable_trialavg.avg_beta_0_500(dataTable_trialavg.group == group & dataTable_trialavg.direc == 90 & dataTable_trialavg.mag == 1);...
-        dataTable_trialavg.avg_beta_0_500(dataTable_trialavg.group == group & dataTable_trialavg.direc == 90 & dataTable_trialavg.mag == 2);...
-        dataTable_trialavg.avg_beta_0_500(dataTable_trialavg.group == group & dataTable_trialavg.direc == 90 & dataTable_trialavg.mag == 3)],...
-        [SRMFits.fit(SRMFits.mus == "TA" & SRMFits.group == grp & SRMFits.pertdir == 90 & SRMFits.pertmagn == "L" & SRMFits.side == "L");...
-        SRMFits.fit(SRMFits.mus == "TA" & SRMFits.group == grp & SRMFits.pertdir == 90 & SRMFits.pertmagn == "M" & SRMFits.side == "L");...
-        SRMFits.fit(SRMFits.mus == "TA" & SRMFits.group == grp & SRMFits.pertdir == 90 & SRMFits.pertmagn == "H" & SRMFits.side == "L")]);
-    plot(lm_beta_0_500_TAR2_F,'Marker','none')
-    
-    ylabel('TA Recon R2'); xlabel('Beta 0-500ms'); legend('off'); ylim(yl)
-    title({['Forward All Mags (TA = Agonist)'];...
-        ['R2 = ' num2str(lm_beta_0_500_TAR2_F.Rsquared.Adjusted) '     p = ' num2str(lm_beta_0_500_TAR2_F.Coefficients.pValue(2))]})
-    
-    plotij(1,2,1,2); hold on
-    plot(dataTable_trialavg.avg_beta_0_500(dataTable_trialavg.group == group & dataTable_trialavg.direc == 270 & dataTable_trialavg.mag == 1),...
-        SRMFits.fitTotal(SRMFits.mus == "TA" & SRMFits.group == grp & SRMFits.pertdir == 270 & SRMFits.pertmagn == "L" & SRMFits.side == "L"),'go','MarkerFaceColor','g')
-    plot(dataTable_trialavg.avg_beta_0_500(dataTable_trialavg.group == group & dataTable_trialavg.direc == 270 & dataTable_trialavg.mag == 2),...
-        SRMFits.fitTotal(SRMFits.mus == "TA" & SRMFits.group == grp & SRMFits.pertdir == 270 & SRMFits.pertmagn == "M" & SRMFits.side == "L"),'bo','MarkerFaceColor','b')
-    plot(dataTable_trialavg.avg_beta_0_500(dataTable_trialavg.group == group & dataTable_trialavg.direc == 270 & dataTable_trialavg.mag == 3),...
-        SRMFits.fitTotal(SRMFits.mus == "TA" & SRMFits.group == grp & SRMFits.pertdir == 270 & SRMFits.pertmagn == "H" & SRMFits.side == "L"),'ro','MarkerFaceColor','r')
-    
-    lm_beta_0_500_TAR2_B = fitlm([dataTable_trialavg.avg_beta_0_500(dataTable_trialavg.group == group & dataTable_trialavg.direc == 270 & dataTable_trialavg.mag == 1);...
-        dataTable_trialavg.avg_beta_0_500(dataTable_trialavg.group == group & dataTable_trialavg.direc == 270 & dataTable_trialavg.mag == 2);...
-        dataTable_trialavg.avg_beta_0_500(dataTable_trialavg.group == group & dataTable_trialavg.direc == 270 & dataTable_trialavg.mag == 3)],...
-        [SRMFits.fitTotal(SRMFits.mus == "TA" & SRMFits.group == grp & SRMFits.pertdir == 270 & SRMFits.pertmagn == "L" & SRMFits.side == "L");...
-        SRMFits.fitTotal(SRMFits.mus == "TA" & SRMFits.group == grp & SRMFits.pertdir == 270 & SRMFits.pertmagn == "M" & SRMFits.side == "L");...
-        SRMFits.fitTotal(SRMFits.mus == "TA" & SRMFits.group == grp & SRMFits.pertdir == 270 & SRMFits.pertmagn == "H" & SRMFits.side == "L")]);
-    plot(lm_beta_0_500_TAR2_B,'Marker','none')
-    
-    ylabel('TA Recon R2'); xlabel('Beta 0-500ms'); ylim(yl)
-    title({['Backward All Mags (TA = Antagonist)'];...
-        ['R2 = ' num2str(lm_beta_0_500_TAR2_B.Rsquared.Adjusted) '     p = ' num2str(lm_beta_0_500_TAR2_B.Coefficients.pValue(2))]})
-    legend('L','M','H')
-    
-    if grp == 1
-        sgtitle('PD TA Recon vs Evoked Beta (0-500ms)')
-        if savefigopt == 1
-            saveas(gcf,[fdir '\PD TA R2 vs beta_0_500.fig'],'fig')
-            saveas(gcf,[fdir '\PD TA R2 vs beta_0_500.jpg'],'jpg')
-            print([fdir '\PD TA R2 vs beta_0_500.eps'], '-depsc','-painters')
-        end
-    elseif grp == 0
-        sgtitle('HOA TA Recon vs Evoked Beta (0-500ms)')
-        if savefigopt == 1
-            saveas(gcf,[fdir '\HOA TA R2 vs beta_0_500.fig'],'fig')
-            saveas(gcf,[fdir '\HOA TA R2 vs beta_0_500.jpg'],'jpg')
-            print([fdir '\HOA TA R2 vs beta_0_500.eps'], '-depsc','-painters')
-        end
-    end
-    
-    %% Plot Beta MG EMG vs SRM beta recon
-    figure; set(gcf,'WindowState','maximized')
-    plotij(1,2,1,1); hold on
-    plot(dataTable_trialavg.avg_beta_0_500(dataTable_trialavg.group == group & dataTable_trialavg.direc == 90 & dataTable_trialavg.mag == 1),...
-        SRMFits.fitTotal(SRMFits.mus == "MGAS" & SRMFits.group == grp & SRMFits.pertdir == 90 & SRMFits.pertmagn == "L" & SRMFits.side == "L"),'go','MarkerFaceColor','g')
-    plot(dataTable_trialavg.avg_beta_0_500(dataTable_trialavg.group == group & dataTable_trialavg.direc == 90 & dataTable_trialavg.mag == 2),...
-        SRMFits.fitTotal(SRMFits.mus == "MGAS" & SRMFits.group == grp & SRMFits.pertdir == 90 & SRMFits.pertmagn == "M" & SRMFits.side == "L"),'bo','MarkerFaceColor','b')
-    plot(dataTable_trialavg.avg_beta_0_500(dataTable_trialavg.group == group & dataTable_trialavg.direc == 90 & dataTable_trialavg.mag == 3),...
-        SRMFits.fitTotal(SRMFits.mus == "MGAS" & SRMFits.group == grp & SRMFits.pertdir == 90 & SRMFits.pertmagn == "H" & SRMFits.side == "L"),'ro','MarkerFaceColor','r')
-    
-    lm_beta_0_500_MGASR2_F = fitlm([dataTable_trialavg.avg_beta_0_500(dataTable_trialavg.group == group & dataTable_trialavg.direc == 90 & dataTable_trialavg.mag == 1);...
-        dataTable_trialavg.avg_beta_0_500(dataTable_trialavg.group == group & dataTable_trialavg.direc == 90 & dataTable_trialavg.mag == 2);...
-        dataTable_trialavg.avg_beta_0_500(dataTable_trialavg.group == group & dataTable_trialavg.direc == 90 & dataTable_trialavg.mag == 3)],...
-        [SRMFits.fitTotal(SRMFits.mus == "MGAS" & SRMFits.group == grp & SRMFits.pertdir == 90 & SRMFits.pertmagn == "L" & SRMFits.side == "L");...
-        SRMFits.fitTotal(SRMFits.mus == "MGAS" & SRMFits.group == grp & SRMFits.pertdir == 90 & SRMFits.pertmagn == "M" & SRMFits.side == "L");...
-        SRMFits.fitTotal(SRMFits.mus == "MGAS" & SRMFits.group == grp & SRMFits.pertdir == 90 & SRMFits.pertmagn == "H" & SRMFits.side == "L")]);
-    plot(lm_beta_0_500_MGASR2_F,'Marker','none')
-    
-    ylabel('MG Recon R2'); xlabel('Beta 0-500ms'); legend('off'); ylim(yl)
-    title({['Forward All Mags (MG = Antagonist)'];...
-        ['R2 = ' num2str(lm_beta_0_500_MGASR2_F.Rsquared.Adjusted) '     p = ' num2str(lm_beta_0_500_MGASR2_F.Coefficients.pValue(2))]})
-    
-    
-    plotij(1,2,1,2); hold on
-    plot(dataTable_trialavg.avg_beta_0_500(dataTable_trialavg.group == group & dataTable_trialavg.direc == 270 & dataTable_trialavg.mag == 1),...
-        SRMFits.fit(SRMFits.mus == "MGAS" & SRMFits.group == grp & SRMFits.pertdir == 270 & SRMFits.pertmagn == "L" & SRMFits.side == "L"),'go','MarkerFaceColor','g')
-    plot(dataTable_trialavg.avg_beta_0_500(dataTable_trialavg.group == group & dataTable_trialavg.direc == 270 & dataTable_trialavg.mag == 2),...
-        SRMFits.fit(SRMFits.mus == "MGAS" & SRMFits.group == grp & SRMFits.pertdir == 270 & SRMFits.pertmagn == "M" & SRMFits.side == "L"),'bo','MarkerFaceColor','b')
-    plot(dataTable_trialavg.avg_beta_0_500(dataTable_trialavg.group == group & dataTable_trialavg.direc == 270 & dataTable_trialavg.mag == 3),...
-        SRMFits.fit(SRMFits.mus == "MGAS" & SRMFits.group == grp & SRMFits.pertdir == 270 & SRMFits.pertmagn == "H" & SRMFits.side == "L"),'ro','MarkerFaceColor','r')
-    
-    lm_beta_0_500_TAR2_B = fitlm([dataTable_trialavg.avg_beta_0_500(dataTable_trialavg.group == group & dataTable_trialavg.direc == 270 & dataTable_trialavg.mag == 1);...
-        dataTable_trialavg.avg_beta_0_500(dataTable_trialavg.group == group & dataTable_trialavg.direc == 270 & dataTable_trialavg.mag == 2);...
-        dataTable_trialavg.avg_beta_0_500(dataTable_trialavg.group == group & dataTable_trialavg.direc == 270 & dataTable_trialavg.mag == 3)],...
-        [SRMFits.fit(SRMFits.mus == "MGAS" & SRMFits.group == grp & SRMFits.pertdir == 270 & SRMFits.pertmagn == "L" & SRMFits.side == "L");...
-        SRMFits.fit(SRMFits.mus == "MGAS" & SRMFits.group == grp & SRMFits.pertdir == 270 & SRMFits.pertmagn == "M" & SRMFits.side == "L");...
-        SRMFits.fit(SRMFits.mus == "MGAS" & SRMFits.group == grp & SRMFits.pertdir == 270 & SRMFits.pertmagn == "H" & SRMFits.side == "L")]);
-    plot(lm_beta_0_500_TAR2_B,'Marker','none')
-    
-    ylabel('MG Recon R2');xlabel('Beta 0-500ms'); ylim(yl)
-    title({['Backward All Mags (MG = Agonist)'];...
-        ['R2 = ' num2str(lm_beta_0_500_TAR2_B.Rsquared.Adjusted) '     p = ' num2str(lm_beta_0_500_TAR2_B.Coefficients.pValue(2))]})
-    legend('L','M','H')
-    
-    if grp == 1
-        sgtitle('PD MG Recon vs Evoked Beta (0-500ms)')
-        if savefigopt == 1
-            saveas(gcf,[fdir '\PD MG R2 vs beta_0_500.fig'],'fig')
-            saveas(gcf,[fdir '\PD MG R2 vs beta_0_500.jpg'],'jpg')
-            print([fdir '\PD MG R2 vs beta_0_500.eps'], '-depsc','-painters')
-        end
-    elseif grp == 0
-        sgtitle('HOA MG Recon vs Evoked Beta (0-500ms)')
-        if savefigopt == 1
-            saveas(gcf,[fdir '\HOA MG R2 vs beta_0_500.fig'],'fig')
-            saveas(gcf,[fdir '\HOA MG R2 vs beta_0_500.jpg'],'jpg')
-            print([fdir '\HOA MG R2 vs beta_0_500.eps'], '-depsc','-painters')
-        end
-    end
-    1;
+EMG_TA_R_specificity_late = nan(size(dataAv.pert_mag));
+EMG_TA_L_specificity_late = nan(size(dataAv.pert_mag));
+EMG_SOL_R_specificity_late = nan(size(dataAv.pert_mag));
+EMG_SOL_L_specificity_late = nan(size(dataAv.pert_mag));
+%% calculate mean output measures
+for i = 1:height(dataAv)
+    % mean beta
+    beta_50_150 (i, :) = mean(dataAv.beta_ersp(i,ind_50_150));
+    beta_100_200(i, :) = mean(dataAv.beta_ersp(i,ind_100_200));
+    beta_150_250(i, :) = mean(dataAv.beta_ersp(i,ind_150_250));
+    beta_200_300(i, :) = mean(dataAv.beta_ersp(i,ind_200_300));
+    beta_250_350(i, :) = mean(dataAv.beta_ersp(i,ind_250_350));
+    beta_300_400(i, :) = mean(dataAv.beta_ersp(i,ind_300_400));
+    beta_350_450(i, :) = mean(dataAv.beta_ersp(i,ind_350_450));
+    beta_400_500(i, :) = mean(dataAv.beta_ersp(i,ind_400_500));
+    %N1
+    [N1_amp_tmp, ind_tmp] = min(dataAv.Cz(i,ind_100_200));
+    N1_amp(i, :) = N1_amp_tmp; ind_N1_latency = find(ind_100_200);
+    N1_latency(i, :) = dataAv.atime(i,ind_N1_latency(ind_tmp));
+    % mean EMG_MGAS_R_norm
+    EMG_MGAS_R_norm_50_150 (i, :) = mean(dataAv.EMG_MGAS_R_norm(i,ind_50_150));
+    EMG_MGAS_R_norm_100_200(i, :) = mean(dataAv.EMG_MGAS_R_norm(i,ind_100_200));
+    EMG_MGAS_R_norm_150_250(i, :) = mean(dataAv.EMG_MGAS_R_norm(i,ind_150_250));
+    EMG_MGAS_R_norm_200_300(i, :) = mean(dataAv.EMG_MGAS_R_norm(i,ind_200_300));
+    EMG_MGAS_R_norm_250_350(i, :) = mean(dataAv.EMG_MGAS_R_norm(i,ind_250_350));
+    EMG_MGAS_R_norm_300_400(i, :) = mean(dataAv.EMG_MGAS_R_norm(i,ind_300_400));
+    EMG_MGAS_R_norm_350_450(i, :) = mean(dataAv.EMG_MGAS_R_norm(i,ind_350_450));
+    EMG_MGAS_R_norm_400_500(i, :) = mean(dataAv.EMG_MGAS_R_norm(i,ind_400_500));
+    % mean EMG_MGAS_L_norm
+    EMG_MGAS_L_norm_50_150 (i, :) = mean(dataAv.EMG_MGAS_L_norm(i,ind_50_150));
+    EMG_MGAS_L_norm_100_200(i, :) = mean(dataAv.EMG_MGAS_L_norm(i,ind_100_200));
+    EMG_MGAS_L_norm_150_250(i, :) = mean(dataAv.EMG_MGAS_L_norm(i,ind_150_250));
+    EMG_MGAS_L_norm_200_300(i, :) = mean(dataAv.EMG_MGAS_L_norm(i,ind_200_300));
+    EMG_MGAS_L_norm_250_350(i, :) = mean(dataAv.EMG_MGAS_L_norm(i,ind_250_350));
+    EMG_MGAS_L_norm_300_400(i, :) = mean(dataAv.EMG_MGAS_L_norm(i,ind_300_400));
+    EMG_MGAS_L_norm_350_450(i, :) = mean(dataAv.EMG_MGAS_L_norm(i,ind_350_450));
+    EMG_MGAS_L_norm_400_500(i, :) = mean(dataAv.EMG_MGAS_L_norm(i,ind_400_500));
+    % mean EMG_SOL_R_norm
+    EMG_SOL_R_norm_50_150 (i, :) = mean(dataAv.EMG_SOL_R_norm(i,ind_50_150));
+    EMG_SOL_R_norm_100_200(i, :) = mean(dataAv.EMG_SOL_R_norm(i,ind_100_200));
+    EMG_SOL_R_norm_150_250(i, :) = mean(dataAv.EMG_SOL_R_norm(i,ind_150_250));
+    EMG_SOL_R_norm_200_300(i, :) = mean(dataAv.EMG_SOL_R_norm(i,ind_200_300));
+    EMG_SOL_R_norm_250_350(i, :) = mean(dataAv.EMG_SOL_R_norm(i,ind_250_350));
+    EMG_SOL_R_norm_300_400(i, :) = mean(dataAv.EMG_SOL_R_norm(i,ind_300_400));
+    EMG_SOL_R_norm_350_450(i, :) = mean(dataAv.EMG_SOL_R_norm(i,ind_350_450));
+    EMG_SOL_R_norm_400_500(i, :) = mean(dataAv.EMG_SOL_R_norm(i,ind_400_500));
+    % mean EMG_SOL_L_norm
+    EMG_SOL_L_norm_50_150 (i, :) = mean(dataAv.EMG_SOL_L_norm(i,ind_50_150));
+    EMG_SOL_L_norm_100_200(i, :) = mean(dataAv.EMG_SOL_L_norm(i,ind_100_200));
+    EMG_SOL_L_norm_150_250(i, :) = mean(dataAv.EMG_SOL_L_norm(i,ind_150_250));
+    EMG_SOL_L_norm_200_300(i, :) = mean(dataAv.EMG_SOL_L_norm(i,ind_200_300));
+    EMG_SOL_L_norm_250_350(i, :) = mean(dataAv.EMG_SOL_L_norm(i,ind_250_350));
+    EMG_SOL_L_norm_300_400(i, :) = mean(dataAv.EMG_SOL_L_norm(i,ind_300_400));
+    EMG_SOL_L_norm_350_450(i, :) = mean(dataAv.EMG_SOL_L_norm(i,ind_350_450));
+    EMG_SOL_L_norm_400_500(i, :) = mean(dataAv.EMG_SOL_L_norm(i,ind_400_500));
+    % mean EMG_TA_L_norm
+    EMG_TA_L_norm_50_150 (i, :) = mean(dataAv.EMG_TA_L_norm(i,ind_50_150));
+    EMG_TA_L_norm_100_200(i, :) = mean(dataAv.EMG_TA_L_norm(i,ind_100_200));
+    EMG_TA_L_norm_150_250(i, :) = mean(dataAv.EMG_TA_L_norm(i,ind_150_250));
+    EMG_TA_L_norm_200_300(i, :) = mean(dataAv.EMG_TA_L_norm(i,ind_200_300));
+    EMG_TA_L_norm_250_350(i, :) = mean(dataAv.EMG_TA_L_norm(i,ind_250_350));
+    EMG_TA_L_norm_300_400(i, :) = mean(dataAv.EMG_TA_L_norm(i,ind_300_400));
+    EMG_TA_L_norm_350_450(i, :) = mean(dataAv.EMG_TA_L_norm(i,ind_350_450));
+    EMG_TA_L_norm_400_500(i, :) = mean(dataAv.EMG_TA_L_norm(i,ind_400_500));
+    % mean EMG_TA_R_norm
+    EMG_TA_R_norm_50_150 (i, :) = mean(dataAv.EMG_TA_R_norm(i,ind_50_150));
+    EMG_TA_R_norm_100_200(i, :) = mean(dataAv.EMG_TA_R_norm(i,ind_100_200));
+    EMG_TA_R_norm_150_250(i, :) = mean(dataAv.EMG_TA_R_norm(i,ind_150_250));
+    EMG_TA_R_norm_200_300(i, :) = mean(dataAv.EMG_TA_R_norm(i,ind_200_300));
+    EMG_TA_R_norm_250_350(i, :) = mean(dataAv.EMG_TA_R_norm(i,ind_250_350));
+    EMG_TA_R_norm_300_400(i, :) = mean(dataAv.EMG_TA_R_norm(i,ind_300_400));
+    EMG_TA_R_norm_350_450(i, :) = mean(dataAv.EMG_TA_R_norm(i,ind_350_450));
+    EMG_TA_R_norm_400_500(i, :) = mean(dataAv.EMG_TA_R_norm(i,ind_400_500));
 end
+%% concatinate data tables
+%create data table
+T = table(beta_50_150, beta_100_200, beta_150_250, beta_200_300, beta_250_350,beta_300_400, beta_350_450, beta_400_500,...
+    N1_amp,N1_latency,...
+    EMG_MGAS_R_norm_50_150,EMG_MGAS_R_norm_100_200,EMG_MGAS_R_norm_150_250,EMG_MGAS_R_norm_200_300,EMG_MGAS_R_norm_250_350,EMG_MGAS_R_norm_300_400,EMG_MGAS_R_norm_350_450,EMG_MGAS_R_norm_400_500,...
+    EMG_MGAS_L_norm_50_150,EMG_MGAS_L_norm_100_200,EMG_MGAS_L_norm_150_250,EMG_MGAS_L_norm_200_300,EMG_MGAS_L_norm_250_350,EMG_MGAS_L_norm_300_400,EMG_MGAS_L_norm_350_450,EMG_MGAS_L_norm_400_500,...
+    EMG_SOL_R_norm_50_150,EMG_SOL_R_norm_100_200,EMG_SOL_R_norm_150_250,EMG_SOL_R_norm_200_300,EMG_SOL_R_norm_250_350,EMG_SOL_R_norm_300_400,EMG_SOL_R_norm_350_450,EMG_SOL_R_norm_400_500,...
+    EMG_SOL_L_norm_50_150,EMG_SOL_L_norm_100_200,EMG_SOL_L_norm_150_250,EMG_SOL_L_norm_200_300,EMG_SOL_L_norm_250_350,EMG_SOL_L_norm_300_400,EMG_SOL_L_norm_350_450,EMG_SOL_L_norm_400_500,...
+    EMG_TA_L_norm_50_150, EMG_TA_L_norm_100_200,EMG_TA_L_norm_150_250,EMG_TA_L_norm_200_300,EMG_TA_L_norm_250_350,EMG_TA_L_norm_300_400,EMG_TA_L_norm_350_450,EMG_TA_L_norm_400_500,...
+    EMG_TA_R_norm_50_150, EMG_TA_R_norm_100_200,EMG_TA_R_norm_150_250,EMG_TA_R_norm_200_300,EMG_TA_R_norm_250_350,EMG_TA_R_norm_300_400,EMG_TA_R_norm_350_450,EMG_TA_R_norm_400_500);
+% concatinate tables
+dataAv = [dataAv T];
+ExcelTable = [ExcelTable T]; clear T
+%% calculate specificity
+participants = unique(dataAv.patient);
+mags = unique(dataAv.pert_mag);
+for i = 1:length(participants)
+    participant = participants(i);
+    for ii = 1:length(mags)
+        mag = mags(ii);
+        ind = strcmp(dataAv.patient,participant) & dataAv.pert_mag == mag;
+        % calculate specificity:
+        % specificity = abs((EMG_forward - EMG_backward))/max(EMG_forward,EMG_backward);
+        TA_R_F_early = dataAv.EMG_TA_R_norm_100_200(ind & dataAv.pertdir_calc_round_deg == 90,:);
+        TA_R_B_early = dataAv.EMG_TA_R_norm_100_200(ind & dataAv.pertdir_calc_round_deg == 270,:);
+        EMG_TA_R_specificity_early(ind,:) = abs(TA_R_F_early - TA_R_B_early)/max([TA_R_F_early, TA_R_B_early]);
+        
+        TA_L_F_early = dataAv.EMG_TA_L_norm_100_200(ind & dataAv.pertdir_calc_round_deg == 90,:);
+        TA_L_B_early = dataAv.EMG_TA_L_norm_100_200(ind & dataAv.pertdir_calc_round_deg == 270,:);
+        EMG_TA_L_specificity_early(ind,:) = abs(TA_L_F_early - TA_L_B_early)/max([TA_L_F_early, TA_L_B_early]);
+        
+        SOL_R_F_early = dataAv.EMG_SOL_R_norm_100_200(ind & dataAv.pertdir_calc_round_deg == 90,:);
+        SOL_R_B_early = dataAv.EMG_SOL_R_norm_100_200(ind & dataAv.pertdir_calc_round_deg == 270,:);
+        EMG_SOL_R_specificity_early(ind,:) = abs(SOL_R_F_early - SOL_R_B_early)/max([SOL_R_F_early, SOL_R_B_early]);
+        
+        SOL_L_F_early = dataAv.EMG_SOL_L_norm_100_200(ind & dataAv.pertdir_calc_round_deg == 90,:);
+        SOL_L_B_early = dataAv.EMG_SOL_L_norm_100_200(ind & dataAv.pertdir_calc_round_deg == 270,:);
+        EMG_SOL_L_specificity_early(ind,:) = abs(SOL_L_F_early - SOL_L_B_early)/max([SOL_L_F_early, SOL_L_B_early]);
+        
+        TA_R_F_late = dataAv.EMG_TA_R_norm_200_300(ind & dataAv.pertdir_calc_round_deg == 90,:);
+        TA_R_B_late = dataAv.EMG_TA_R_norm_200_300(ind & dataAv.pertdir_calc_round_deg == 270,:);
+        EMG_TA_R_specificity_late(ind,:) = abs(TA_R_F_late - TA_R_B_late)/max([TA_R_F_late, TA_R_B_late]);
+        
+        TA_L_F_late = dataAv.EMG_TA_L_norm_200_300(ind & dataAv.pertdir_calc_round_deg == 90,:);
+        TA_L_B_late = dataAv.EMG_TA_L_norm_200_300(ind & dataAv.pertdir_calc_round_deg == 270,:);
+        EMG_TA_L_specificity_late(ind,:) = abs(TA_L_F_late - TA_L_B_late)/max([TA_L_F_late, TA_L_B_late]);
+        
+        SOL_R_F_late = dataAv.EMG_SOL_R_norm_200_300(ind & dataAv.pertdir_calc_round_deg == 90,:);
+        SOL_R_B_late = dataAv.EMG_SOL_R_norm_200_300(ind & dataAv.pertdir_calc_round_deg == 270,:);
+        EMG_SOL_R_specificity_late(ind,:) = abs(SOL_R_F_late - SOL_R_B_late)/max([SOL_R_F_late, SOL_R_B_late]);
+        
+        SOL_L_F_late = dataAv.EMG_SOL_L_norm_200_300(ind & dataAv.pertdir_calc_round_deg == 90,:);
+        SOL_L_B_late = dataAv.EMG_SOL_L_norm_200_300(ind & dataAv.pertdir_calc_round_deg == 270,:);
+        EMG_SOL_L_specificity_late(ind,:) = abs(SOL_L_F_late - SOL_L_B_late)/max([SOL_L_F_late, SOL_L_B_late]);
+        
+        figure;
+        plotij(2,2,1,1); hold on
+        plot(dataAv.atime(1,:),dataAv.EMG_SOL_L_norm(ind & dataAv.pertdir_calc_round_deg == 90,:),'r')
+        plot(dataAv.atime(1,:),dataAv.EMG_SOL_L_norm(ind & dataAv.pertdir_calc_round_deg == 270,:),'b')
+        plot([0 0], [0 1],'k--'); plot([0.1 0.2],[1.1 1.1],'k-'); plot([0.2 0.3],[1 1],'k-');
+        xlim([-0.1 1])
+        title('SOL_L'); legend('Forward','Backward'); 
+        plotij(2,2,1,2); hold on
+        plot(dataAv.atime(1,:),dataAv.EMG_SOL_R_norm(ind & dataAv.pertdir_calc_round_deg == 90,:),'r')
+        plot(dataAv.atime(1,:),dataAv.EMG_SOL_R_norm(ind & dataAv.pertdir_calc_round_deg == 270,:),'b')
+        plot([0 0], [0 1],'k--'); plot([0.1 0.2],[1.1 1.1],'k-'); plot([0.2 0.3],[1 1],'k-');
+        xlim([-0.1 1])
+        title('SOL_R');
+        plotij(2,2,2,1); hold on
+        plot(dataAv.atime(1,:),dataAv.EMG_TA_L_norm(ind & dataAv.pertdir_calc_round_deg == 90,:),'r')
+        plot(dataAv.atime(1,:),dataAv.EMG_TA_L_norm(ind & dataAv.pertdir_calc_round_deg == 270,:),'b')
+        plot([0 0], [0 1],'k--'); plot([0.1 0.2],[1.1 1.1],'k-'); plot([0.2 0.3],[1 1],'k-');
+        xlim([-0.1 1])
+        title('TA_L'); xlabel('time (s)')
+        plotij(2,2,2,2); hold on
+        plot(dataAv.atime(1,:),dataAv.EMG_TA_R_norm(ind & dataAv.pertdir_calc_round_deg == 90,:),'r')
+        plot(dataAv.atime(1,:),dataAv.EMG_TA_R_norm(ind & dataAv.pertdir_calc_round_deg == 270,:),'b')
+        plot([0 0], [0 1],'k--'); plot([0.1 0.2],[1.1 1.1],'k-'); plot([0.2 0.3],[1 1],'k-');
+        xlim([-0.1 1])
+        title('TA_R'); xlabel('time (s)')
+        sgtitle(participant + " mag" + num2str(mag))
+        if savefigopt
+            saveas(gcf,[figdir + participant + '_Specificity_mag' + num2str(mag) + '.fig'],'fig')
+            saveas(gcf,[figdir + participant + '_Specificity_mag' + num2str(mag) + '.jpg'],'jpg')
+            print(gcf,'-depsc2',[figdir + participant + '_Specificity_mag' + num2str(mag) + '.eps'])
+        end
+        close all
+    end    
+end
+%% concatinate data tables
+%create data table
+T = table(EMG_TA_R_specificity_early, EMG_TA_L_specificity_early,...
+    EMG_SOL_R_specificity_early, EMG_SOL_L_specificity_early, EMG_TA_R_specificity_late,...
+    EMG_TA_L_specificity_late, EMG_SOL_R_specificity_late, EMG_SOL_L_specificity_late);
+% concatinate tables
+dataAv = [dataAv T];
+ExcelTable = [ExcelTable T]; clear T
+
+%% save output
+save([savedir 'HOA_PD_SRM_Outputs_wAnalysis_' date '.mat'], 'dataAv','ExcelTable')
+writetable(ExcelTable,[savedir 'HOA_PD_SRM_Outputs_wAnalysis_Excel_' date '.xlsx'])
+
+%% functions
+function ind = create_ind(start_time, end_time, data)
+ind = data > start_time & data <= end_time;
+end
+

@@ -7,7 +7,7 @@ addpath('D:\Users\SBOEBIN\Documents\MATLAB\eeglab2021.0\')
 % set file list
 fdir = 'X:\\ting\\shared_ting\\Scott\\HOA_PD EEG Data'; % folder path that contains preprocessed EEG data
 files = dir(fullfile([fdir '\\Updated Events'], '*_UpdatedEvents.set'));
-files(1:end-3,:) = [];
+files(1:end-3,:) = []; % for single participant debugging
 for i = 1:size(files,1)
     % specify file name for Updated data
     filename = files(i).name;
