@@ -9,33 +9,31 @@ if strcmp("cpu1",pcname)
     addpath('D:\Users\SBOEBIN\Documents\MATLAB\SRMUtilities')
     addpath('D:\Users\SBOEBIN\Documents\MATLAB\matlabUtilities-master')
     load('D:\Users\SBOEBIN\Documents\MATLAB\Post creatfitsData Output\HOA_PD_DataTables_interp_norm_18-Oct-2023.mat') %output measures Table (EEG, EMG, etc.)
-    savedir = 'D:\Users\SBOEBIN\Documents\MATLAB\HOA_PD_SRM_Output\';
-    figdir = 'D:\Users\SBOEBIN\Documents\MATLAB\HOA_PD_SRM_Output\savedfigs\';
 elseif strcmp("pc",pcname)
     addpath('C:\Users\seboe\OneDrive - Emory University\Documents\Grad School\Neuromechanics Lab\SRM\SRM-Practice\SRMUtilities')
     addpath('C:\Users\seboe\OneDrive - Emory University\Documents\Grad School\Neuromechanics Lab\SRM\matlabUtilities-master')
     load('C:\Users\seboe\OneDrive - Emory University\Documents\Grad School\Neuromechanics Lab\SRM\Data\SRM Analysis\HOA_PD_DataTables_05-Oct-2023.mat') %output measures Table (EEG, EMG, etc.)
-    
-    figdir = 'C:\Users\seboe\OneDrive - Emory University\Documents\Grad School\Neuromechanics Lab\SRM\Data\SRM Analysis\HOA_PD_SRM_savedfigs\';
 end
 % dataAv.Cz = double(dataAv.Cz); %convert Cz(t) to class double for SRM recon
-
+savedir = 'X:\ting\shared_ting\Scott\HOA_PD SRM\';
 %% User inputs
 removeBackLev = 1;
 % Saving options (if = 1 then will save)
 saveopt = true; %Output
-savefigopt = 0; %Figures
-plotopt = false; %option to plot figures at all
-
 % SRM reconstruction options
 cSRMs_opt = true;
-
 % Grouping Variables
 direcs = unique(dataAv.pertdir_calc_round_deg); % directions to be analyzed (90 and 270)
+% direcs = 270;
 mags = unique(dataAv.pert_mag);
+% mags = mags(2);
 groups = unique(dataAv.group); %Group marker ("HOA" or "PD" -- string)
-% subj_IDs = unique(dataAv.patient); %Unique subject code (i.e. "HOA02" -- string)
-participants = unique(dataAv.patient); %Unique subject code (i.e. "HOA02" -- string)
+% participants = unique(dataAv.patient); %Unique subject code (i.e. "HOA02" -- string)
+% participants = ["HOA02"; "HOA04"; "HOA08"; "HOA13"; "HOA19";...
+%     "PD03"; "PD11"; "PD12"; "PD13"; "PD15"; "PD17"; "PD20"]; % fit specific participants only
+participants = ["PD02"; "PD03"; "PD11"];
+dataAv = dataAv(ismember(dataAv.patient, participants),:); % eliminate rows of dataAv if they are not part of "participants"
+analysisType = 'PD_Exemplars'; % to modify save name with unique identifier
 
 %% Add SRM Outputs to the data table
 %Find common time span for all variables (MoCap, EEG, EMG)
@@ -253,7 +251,9 @@ for Participant = participants' % iterate across each participant
                 predictorsDual_beta = [predictorsmSRM; predictorsResiduals_beta];
                 [xTotal_ag_dual_beta, eTotalRecon_ag_dual_beta, fitTotal_ag_dual_beta] = fitTotalDualSRM_eeg(agonist(ind_time), atime(ind_time), predictorsDual_beta, X0Dual, subjID, mag, type);
                 clear type
-                
+                if removeBackLev
+                    eTotalRecon_ag_dual_beta = eTotalRecon_ag_dual_beta + backLev_agonist;
+                end
                 %% Fit Residuals of eRecon_ag w/ Cz(t)
                 type = 'Cz';
                 predictorsResiduals_Cz = -Cz(ind_time);
@@ -271,6 +271,9 @@ for Participant = participants' % iterate across each participant
                 predictorsDual_Cz = [predictorsmSRM; predictorsResiduals_Cz];
                 [xTotal_ag_dual_Cz, eTotalRecon_ag_dual_Cz, fitTotal_ag_dual_Cz] = fitTotalDualSRM_eeg(agonist(ind_time), atime(ind_time), predictorsDual_Cz, X0Dual, subjID, mag, type);
                 clear type
+                if removeBackLev
+                    eTotalRecon_ag_dual_Cz = eTotalRecon_ag_dual_Cz + backLev_agonist;
+                end
             end
             %% Fit Residuals of eRecon_ag w/ CoM Kinematics
             predictorsResiduals_CoM = predictorsmSRM;
@@ -381,8 +384,8 @@ if saveopt
     end
     
     ExcelTable(:,ind_delete) = [];
-    writetable(ExcelTable,[savedir 'HOA_PD_SRM_Output_StatsTable_' date '.xlsx'])
-    save([savedir 'HOA_PD_SRM_Outputs_' date '.mat'], 'dataAv','ExcelTable')
+    writetable(ExcelTable,[savedir 'HOA_PD_SRM_Output_StatsTable_' analysisType '_' date '.xlsx'])
+    save([savedir 'HOA_PD_SRM_Outputs_' analysisType '_' date '.mat'], 'dataAv','ExcelTable')
 end
 disp('SRM Pipeline Complete!')
 toc
@@ -687,69 +690,8 @@ options = optimoptions('fmincon',...
     );
 
 % 60-250 ms search range from welch 2008
-
 %Hand fit certain conditions
-if (strcmp(subjID,'step01') & magnitude == 1) | (strcmp(subjID,'step01') & magnitude == 3)
-    X0 = [10.0 0.01 0.01 0.100]; %[ka, kv, kd, lambda]
-    UB = [15.0 0.04 0.04 0.150];
-    LB = [ 0.0 0.00 0.00 0.060];
-elseif strcmp(subjID,'step02')
-    X0 = [10.0 0.01 0.01 0.100]; %[ka, kv, kd, lambda]
-    UB = [15.0 0.04 0.04 0.115];
-    LB = [ 0.0 0.00 0.00 0.060];
-elseif strcmp(subjID,'step04') & magnitude == 1
-    X0 = [10.0 0.01 0.01 0.100]; %[ka, kv, kd, lambda]
-    UB = [15.0 0.04 0.04 0.150];
-    LB = [ 0.0 0.00 0.00 0.060];
-elseif strcmp(subjID,'step05') & magnitude == 3
-    X0 = [10.0 0.01 0.01 0.100]; %[ka, kv, kd, lambda]
-    UB = [15.0 0.04 0.04 0.150];
-    LB = [ 0.0 0.00 0.00 0.060];
-elseif strcmp(subjID,'step06') & magnitude == 1
-    X0 = [10.0 0.01 0.01 0.100]; %[ka, kv, kd, lambda]
-    UB = [15.0 0.04 0.04 0.150];
-    LB = [ 0.0 0.00 0.00 0.060];
-elseif strcmp(subjID,'step07') & magnitude == 3
-    X0 = [10.0 0.01 0.01 0.100]; %[ka, kv, kd, lambda]
-    UB = [15.0 0.04 0.04 0.150];
-    LB = [ 0.0 0.00 0.00 0.060];
-elseif (strcmp(subjID,'step08') & magnitude == 1) | (strcmp(subjID,'step08') & magnitude == 2)
-    X0 = [10.0 0.01 0.01 0.100]; %[ka, kv, kd, lambda]
-    UB = [15.0 0.04 0.04 0.150];
-    LB = [ 0.0 0.00 0.00 0.060];
-elseif (strcmp(subjID,'step10') & magnitude == 2)
-    X0 = [10.0 0.01 0.01 0.100]; %[ka, kv, kd, lambda]
-    UB = [15.0 0.04 0.04 0.150];
-    LB = [ 0.0 0.00 0.00 0.060];
-elseif strcmp(subjID,'step11')
-    X0 = [10.0 0.01 0.01 0.100]; %[ka, kv, kd, lambda]
-    UB = [15.0 0.04 0.04 0.150];
-    LB = [ 0.0 0.00 0.00 0.060];
-elseif strcmp(subjID,'step12') & magnitude == 2
-    X0 = [10.0 0.01 0.01 0.100]; %[ka, kv, kd, lambda]
-    UB = [15.0 0.04 0.04 0.150];
-    LB = [ 0.0 0.00 0.00 0.060];
-elseif strcmp(subjID,'step15') & magnitude == 3
-    X0 = [10.0 0.01 0.01 0.100]; %[ka, kv, kd, lambda]
-    UB = [15.0 0.04 0.04 0.150];
-    LB = [ 0.0 0.00 0.00 0.060];
-elseif strcmp(subjID,'step17') & magnitude == 2
-    X0 = [10.0 0.01 0.01 0.100]; %[ka, kv, kd, lambda]
-    UB = [15.0 0.04 0.04 0.150];
-    LB = [ 0.0 0.00 0.00 0.060];
-elseif strcmp(subjID,'step18') & magnitude == 3
-    X0 = [10.0 0.01 0.01 0.100]; %[ka, kv, kd, lambda]
-    UB = [15.0 0.04 0.04 0.150];
-    LB = [ 0.0 0.00 0.00 0.060];
-elseif strcmp(subjID,'step19')
-    X0 = [10.0 0.01 0.01 0.100]; %[ka, kv, kd, lambda]
-    UB = [15.0 0.04 0.04 0.150];
-    LB = [ 0.0 0.00 0.00 0.060];
-elseif strcmp(subjID,'step20') & magnitude == 3
-    X0 = [10.0 0.01 0.01 0.100]; %[ka, kv, kd, lambda]
-    UB = [15.0 0.04 0.04 0.150];
-    LB = [ 0.0 0.00 0.00 0.060];
-elseif strcmp(subjID,'step21')
+if (strcmp(subjID,'HOA08') && magnitude == 10) | (strcmp(subjID,'HOA08') && magnitude == 7.5)
     X0 = [10.0 0.01 0.01 0.100]; %[ka, kv, kd, lambda]
     UB = [15.0 0.04 0.04 0.150];
     LB = [ 0.0 0.00 0.00 0.060];
@@ -1306,8 +1248,13 @@ options = optimoptions('fmincon',...
     );
 
 %Initial guess is midpoint of lower and upper bounds (LB and UB, respectively)
-X0 = (UB-LB)/2; %[k_beta, lambda_beta]
+X0 = (UB-LB)/2; 
 gainFlag = [true true true false];
+
+if (strcmp(subjID,'HOA19') & magnitude == 7.5)
+    X0(end) = 0.200; %manually set ctx CoM delay
+    UB(end) = 0.250;
+end
 
 fixBurstGain = true;
 
@@ -1358,15 +1305,13 @@ UB(~gainFlag) = min(X0(~gainFlag)+0.010,0.250);
 LB(~gainFlag) = max(X0(~gainFlag)-0.010,0.060);
 
 % try to hand fit participants
-if (strcmp(subjID,'step04') & magnitude == 3)
-    X0(end) = 0.300; %manually set ctx CoM delay
-    UB(end) = 0.400;
-elseif (strcmp(subjID,'step05') & magnitude == 3)
-    X0(end) = 0.300; %manually set ctx CoM delay
-    UB(end) = 0.400;
-elseif (strcmp(subjID,'step08') & magnitude == 3)
-    %     X0(2) = 0.005; LB(2) = 0; UB(2) = 0.025;
-    X0(end) = 0.370; LB(end) = 200; UB(end) = 0.500;
+if (strcmp(subjID,'HOA19') & magnitude == 7.5)
+    %lambda2
+    UB(end) = 0.250; X0(end) = 0.200;
+    %ka1
+    UB(1) = 4.9; LB(1) = 4.7; X0(1) = 4.8;
+    %ka2
+    UB(5) = 3.5; LB(5) = 2.4; X0(5) = 2.7;
 end
 
 % add a very small offset to improve convergence when LB and UB are very

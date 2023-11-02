@@ -1,18 +1,20 @@
 %% Script to plot SRM Outputs
 close all; clear
-fdir = 'D:\Users\SBOEBIN\Documents\MATLAB\HOA_PD_SRM_Output\';
-load([fdir 'HOA_PD_SRM_Outputs_18-Oct-2023.mat'])
+fdir = 'X:\ting\shared_ting\Scott\HOA_PD SRM\';
+% load([fdir 'HOA_PD_SRM_Outputs_18-Oct-2023.mat'])
+load([fdir 'HOA_PD_SRM_Outputs_HOA19_23-Oct-2023.mat']) % exemplar participants for R01 Renewal Figure
 addpath('D:\Users\SBOEBIN\Documents\MATLAB\SRMUtilities')
 addpath('D:\Users\SBOEBIN\Documents\MATLAB\matlabUtilities-master')
 
 savefigopt = true;
+closeopt = true; %option to close all figures after the participant loop
 figdir = 'X:\ting\shared_ting\Scott\HOA_PD SRM\savedfigs\';
 %% plot data
 % plot list - mSRM/hSRM comparisons (1 per direction & mag), Recon vs Data
 % comparison (1 per direction), SRM components, (1 per direction
 participants = unique(dataAv.patient);
 direcs = unique(dataAv.pertdir_calc_round_deg);
-mags = unique(dataAv.pert_mag); mags(end) = [];
+mags = unique(dataAv.pert_mag);
 
 max_time = 1.2;
 min_time = -0.2;
@@ -58,14 +60,14 @@ for i = 1:length(participants) %participant loop
             end
             %% plot mSRM hSRM comparisons
             yl = [0 1];
-            figure(i + iii + direc + 1000); set(gcf,'WindowState','maximized');
+            figure(i*100 + iii*1000 + direc + 10000); set(gcf,'WindowState','maximized');
             %mSRM
             ax1 = plotij(4,2,1,1); hold on
             plot(atime,agonist,'k','LineWidth',2)
             plot(atime(ind_time),dataAv.Recon_Agonist(ind_cond,:),'r','LineWidth',2)
             title_string = {['mSRM']...
-                [sprintf('k_{a}=%1.2g', dataAv.Gains_Ag(1)) ' ' sprintf('k_{v}=%1.2g',dataAv.Gains_Ag(2)) ' ' sprintf('k_{d}=%1.2g',dataAv.Gains_Ag(3))]...
-                [sprintf('R^{2} = %1.2g',dataAv.fit_agonist(1)) '      ' sprintf('VAF = %1.2g',dataAv.fit_agonist(2))]};
+                [sprintf('k_{a}=%1.2g', dataAv.Gains_Ag(ind_cond,1)) ' ' sprintf('k_{v}=%1.2g',dataAv.Gains_Ag(ind_cond,2)) ' ' sprintf('k_{d}=%1.2g',dataAv.Gains_Ag(ind_cond,3))]...
+                [sprintf('R^{2} = %1.2g',dataAv.fit_agonist(ind_cond,1)) '      ' sprintf('VAF = %1.2g',dataAv.fit_agonist(ind_cond,2))]};
             title(title_string)
             legend('Data','mSRM'); ylabel([tag_ag ' EMG']);
             
@@ -74,10 +76,10 @@ for i = 1:length(participants) %participant loop
             plot(atime,agonist,'k','LineWidth',2)
             plot(atime(ind_time),dataAv.Recon_Agonist_TotalDual_CoM(ind_cond,:),'m','LineWidth',2)
             title_string = {['hSRM - CoM']...
-                [sprintf('k_{a1}=%1.2g', dataAv.Gains_Ag_TotalDual_CoM(1)) ' ' sprintf('k_{v1}=%1.2g',dataAv.Gains_Ag_TotalDual_CoM(2))...
-                ' ' sprintf('k_{d1}=%1.2g',dataAv.Gains_Ag_TotalDual_CoM(3)) '      ' sprintf('k_{a2}=%1.2g',dataAv.Gains_Ag_TotalDual_CoM(5))...
-                ' ' sprintf('k_{v1}=%1.2g',dataAv.Gains_Ag_TotalDual_CoM(6)) ' ' sprintf('k_{d2}=%1.2g',dataAv.Gains_Ag_TotalDual_CoM(7))]...
-                [sprintf('R^{2} = %1.2g',dataAv.fit_agonist_TotalDual_CoM(1)) '      ' sprintf('VAF = %1.2g',dataAv.fit_agonist_TotalDual_CoM(2))]};
+                [sprintf('k_{a1}=%1.2g', dataAv.Gains_Ag_TotalDual_CoM(ind_cond,1)) ' ' sprintf('k_{v1}=%1.2g',dataAv.Gains_Ag_TotalDual_CoM(ind_cond,2))...
+                ' ' sprintf('k_{d1}=%1.2g',dataAv.Gains_Ag_TotalDual_CoM(ind_cond,3)) '      ' sprintf('k_{a2}=%1.2g',dataAv.Gains_Ag_TotalDual_CoM(ind_cond,5))...
+                ' ' sprintf('k_{v1}=%1.2g',dataAv.Gains_Ag_TotalDual_CoM(ind_cond,6)) ' ' sprintf('k_{d2}=%1.2g',dataAv.Gains_Ag_TotalDual_CoM(ind_cond,7))]...
+                [sprintf('R^{2} = %1.2g',dataAv.fit_agonist_TotalDual_CoM(ind_cond,1)) '      ' sprintf('VAF = %1.2g',dataAv.fit_agonist_TotalDual_CoM(ind_cond,2))]};
             title(title_string)
             legend('Data','hSRM (CoM)'); ylabel([tag_ag ' EMG']); xlabel('Time (s)');
             
@@ -86,10 +88,9 @@ for i = 1:length(participants) %participant loop
             plot(atime,agonist,'k','LineWidth',2)
             plot(atime(ind_time),dataAv.Recon_Agonist_TotalDual_Cz(ind_cond,:),'b','LineWidth',2)
             title_string = {['hSRM - Cz']...
-                [sprintf('k_{a1}=%1.2g', dataAv.Gains_Ag_TotalDual_Cz(1)) ' ' sprintf('k_{v1}=%1.2g',dataAv.Gains_Ag_TotalDual_Cz(2))...
-                ' ' sprintf('k_{d1}=%1.2g',dataAv.Gains_Ag_TotalDual_Cz(3)) '      ' sprintf('k_{a2}=%1.2g',dataAv.Gains_Ag_TotalDual_Cz(5))...
-                ' ' sprintf('k_{v1}=%1.2g',dataAv.Gains_Ag_TotalDual_Cz(6)) ' ' sprintf('k_{d2}=%1.2g',dataAv.Gains_Ag_TotalDual_Cz(7))]...
-                [sprintf('R^{2} = %1.2g',dataAv.fit_agonist_TotalDual_Cz(1)) '      ' sprintf('VAF = %1.2g',dataAv.fit_agonist_TotalDual_Cz(2))]};
+                [sprintf('k_{a1}=%1.2g', dataAv.Gains_Ag_TotalDual_Cz(ind_cond,1)) ' ' sprintf('k_{v1}=%1.2g',dataAv.Gains_Ag_TotalDual_Cz(ind_cond,2))...
+                ' ' sprintf('k_{d1}=%1.2g',dataAv.Gains_Ag_TotalDual_Cz(ind_cond,3)) '      ' sprintf('k_{Cz}=%1.2g',dataAv.Gains_Ag_TotalDual_Cz(ind_cond,5))]...
+                [sprintf('R^{2} = %1.2g',dataAv.fit_agonist_TotalDual_Cz(ind_cond,1)) '      ' sprintf('VAF = %1.2g',dataAv.fit_agonist_TotalDual_Cz(ind_cond,2))]};
             title(title_string)
             legend('Data','hSRM (Cz)'); ylabel([tag_ag ' EMG']); xlabel('Time (s)');
             
@@ -98,10 +99,9 @@ for i = 1:length(participants) %participant loop
             plot(atime,agonist,'k','LineWidth',2)
             plot(atime(ind_time),dataAv.Recon_Agonist_TotalDual_beta(ind_cond,:),'g','LineWidth',2)
             title_string = {['hSRM - Cz']...
-                [sprintf('k_{a1}=%1.2g', dataAv.Gains_Ag_TotalDual_beta(1)) ' ' sprintf('k_{v1}=%1.2g',dataAv.Gains_Ag_TotalDual_beta(2))...
-                ' ' sprintf('k_{d1}=%1.2g',dataAv.Gains_Ag_TotalDual_beta(3)) '      ' sprintf('k_{a2}=%1.2g',dataAv.Gains_Ag_TotalDual_beta(5))...
-                ' ' sprintf('k_{v1}=%1.2g',dataAv.Gains_Ag_TotalDual_beta(6)) ' ' sprintf('k_{d2}=%1.2g',dataAv.Gains_Ag_TotalDual_beta(7))]...
-                [sprintf('R^{2} = %1.2g',dataAv.fit_agonist_TotalDual_beta(1)) '      ' sprintf('VAF = %1.2g',dataAv.fit_agonist_TotalDual_beta(2))]};
+                [sprintf('k_{a1}=%1.2g', dataAv.Gains_Ag_TotalDual_beta(ind_cond,1)) ' ' sprintf('k_{v1}=%1.2g',dataAv.Gains_Ag_TotalDual_beta(ind_cond,2))...
+                ' ' sprintf('k_{d1}=%1.2g',dataAv.Gains_Ag_TotalDual_beta(ind_cond,3)) '      ' sprintf('k_{beta}=%1.2g',dataAv.Gains_Ag_TotalDual_beta(ind_cond,5))]...
+                [sprintf('R^{2} = %1.2g',dataAv.fit_agonist_TotalDual_beta(ind_cond,1)) '      ' sprintf('VAF = %1.2g',dataAv.fit_agonist_TotalDual_beta(ind_cond,2))]};
             title(title_string)
             legend('Data','hSRM (beta)'); ylabel([tag_ag ' EMG']); xlabel('Time (s)');
             
@@ -120,36 +120,79 @@ for i = 1:length(participants) %participant loop
             set(ax2,'YLim',yl)
             set(ax_all,'YLim',yl)
             
+%             if savefigopt
+%                 saveas(gcf,[figdir + participant + '_DualSRMCompare_mag' + num2str(mag) + '_direc' + num2str(direc) + '.fig'],'fig')
+%                 saveas(gcf,[figdir + participant + '_DualSRMCompare_mag' + num2str(mag) + '_direc' + num2str(direc) + '.jpg'],'jpg')
+%                 print(gcf,'-depsc2',[figdir + participant + '_DualSRMCompare_mag' + num2str(mag) + '_direc' + num2str(direc) + '.eps'])
+%             end
+            
+            
+%             %% plot Output variables
+%             figure(i + iii + direc + 10000); set(gcf,'WindowState','maximized');
+%             plotij(5,1,1,1)
+%             plot(atime,dataAv.COMAccel_Y(ind_cond,:)); ylabel('CoM - Acc (g)')
+%             plotij(5,1,2,1)
+%             plot(atime,dataAv.beta_ersp(ind_cond,:)); ylabel('beta (nu)')
+%             plotij(5,1,3,1)
+%             plot(atime,agonist); ylim(yl); ylabel('agonist (nu)')
+%             plotij(5,1,4,1)
+%             plot(atime,antagonist); ylim(yl); ylabel('antagonist (nu)')
+%             plotij(5,1,5,1)
+%             plot(atime,dataAv.COMPosminusLVDT_Y(ind_cond,:)); ylabel('CoM - Pos (cm)')
+%             xlabel('time (s)')
+%             sgtitle([participant + ' Mag' + num2str(mag) + " direc" + num2str(direc)])
+%             if savefigopt
+%                 saveas(gcf,[figdir + participant + '_OutputMeasures_mag' + num2str(mag) + '_direc' + num2str(direc) + '.fig'],'fig')
+%                 saveas(gcf,[figdir + participant + '_OutputMeasures_mag' + num2str(mag) + '_direc' + num2str(direc) + '.jpg'],'jpg')
+%                 print(gcf,'-depsc2',[figdir + participant + '_OutputMeasures_mag' + num2str(mag) + '_direc' + num2str(direc) + '.eps'])
+%             end
+            
+            %% plot Components for hSRM-CoM
+            backLev_agonist = mean(agonist(atime < -0.1),'omitnan');
+            figure; hold on
+            plot(atime,agonist,'b','LineWidth',2)
+            plot(atime(ind_time),dataAv.Recon_Agonist_TotalDual_CoM(ind_cond,:),...
+                'm','LineWidth',2)
+            %plot subctx components
+            plot(atime(ind_time)+dataAv.Gains_Ag_TotalDual_CoM(ind_cond,4),...
+                a_ag(ind_time)*dataAv.Gains_Ag_TotalDual_CoM(ind_cond,1)+backLev_agonist,...
+                'g-','LineWidth',1)
+            plot(atime(ind_time)+dataAv.Gains_Ag_TotalDual_CoM(ind_cond,4),...
+                v_ag(ind_time)*dataAv.Gains_Ag_TotalDual_CoM(ind_cond,2)+backLev_agonist,...
+                'g.-','LineWidth',1)
+            plot(atime(ind_time)+dataAv.Gains_Ag_TotalDual_CoM(ind_cond,4),...
+                d_ag(ind_time)*dataAv.Gains_Ag_TotalDual_CoM(ind_cond,3)+backLev_agonist,...
+                'g--','LineWidth',1)
+            
+            %plot ctx components
+            plot(atime(ind_time)+dataAv.Gains_Ag_TotalDual_CoM(ind_cond,8),...
+                a_ag(ind_time)*dataAv.Gains_Ag_TotalDual_CoM(ind_cond,5)+backLev_agonist,...
+                'g-','LineWidth',1)
+            plot(atime(ind_time)+dataAv.Gains_Ag_TotalDual_CoM(ind_cond,8),...
+                v_ag(ind_time)*dataAv.Gains_Ag_TotalDual_CoM(ind_cond,6)+backLev_agonist,...
+                'g.-','LineWidth',1)
+            plot(atime(ind_time)+dataAv.Gains_Ag_TotalDual_CoM(ind_cond,8),...
+                d_ag(ind_time)*dataAv.Gains_Ag_TotalDual_CoM(ind_cond,7)+backLev_agonist,...
+                'g--','LineWidth',1)
+            
+            title_string = {[char(participant) ' hSRM - CoM']...
+                [sprintf('k_{a1}=%1.2g', dataAv.Gains_Ag_TotalDual_CoM(ind_cond,1)) ' ' sprintf('k_{v1}=%1.2g',dataAv.Gains_Ag_TotalDual_CoM(ind_cond,2))...
+                ' ' sprintf('k_{d1}=%1.2g',dataAv.Gains_Ag_TotalDual_CoM(ind_cond,3)) '      ' sprintf('k_{a2}=%1.2g',dataAv.Gains_Ag_TotalDual_CoM(ind_cond,5))...
+                ' ' sprintf('k_{v2}=%1.2g',dataAv.Gains_Ag_TotalDual_CoM(ind_cond,6)) ' ' sprintf('k_{d2}=%1.2g',dataAv.Gains_Ag_TotalDual_CoM(ind_cond,7))]...
+                [sprintf('R^{2} = %1.2g',dataAv.fit_agonist_TotalDual_CoM(ind_cond,1)) '      ' sprintf('VAF = %1.2g',dataAv.fit_agonist_TotalDual_CoM(ind_cond,2))]};
+            title(title_string)
+            legend('Data','hSRM (CoM)'); ylabel([tag_ag ' EMG']); xlabel('Time (s)');
+            xlim([-0.2 1.4]); ylim([-1 1])
+            
             if savefigopt
-                saveas(gcf,[figdir + participant + '_DualSRMCompare_mag' + num2str(mag) + '_direc' + num2str(direc) + '.fig'],'fig')
-                saveas(gcf,[figdir + participant + '_DualSRMCompare_mag' + num2str(mag) + '_direc' + num2str(direc) + '.jpg'],'jpg')
-                print(gcf,'-depsc2',[figdir + participant + '_DualSRMCompare_mag' + num2str(mag) + '_direc' + num2str(direc) + '.eps'])
+                saveas(gcf,[figdir + participant + '_hSRM_CoM_Comps_mag' + num2str(mag) + '_direc' + num2str(direc) + '.fig'],'fig')
+                saveas(gcf,[figdir + participant + '_hSRM_CoM_Comps_mag' + num2str(mag) + '_direc' + num2str(direc) + '.jpg'],'jpg')
+                print(gcf,'-depsc2',[figdir + participant + '_hSRM_CoM_Comps_mag' + num2str(mag) + '_direc' + num2str(direc) + '.eps'])
             end
-            
-            
-            %% plot Output variables
-            figure(i + iii + direc + 10000); set(gcf,'WindowState','maximized');
-            plotij(5,1,1,1)
-            plot(atime,dataAv.COMAccel_Y(ind_cond,:)); ylabel('CoM - Acc (g)')
-            plotij(5,1,2,1)
-            plot(atime,dataAv.beta_ersp(ind_cond,:)); ylabel('beta (nu)')
-            plotij(5,1,3,1)
-            plot(atime,agonist); ylim(yl); ylabel('agonist (nu)')
-            plotij(5,1,4,1)
-            plot(atime,antagonist); ylim(yl); ylabel('antagonist (nu)')
-            plotij(5,1,5,1)
-            plot(atime,dataAv.COMPosminusLVDT_Y(ind_cond,:)); ylabel('CoM - Pos (cm)')
-            xlabel('time (s)')
-            sgtitle([participant + ' Mag' + num2str(mag) + " direc" + num2str(direc)])
-            if savefigopt
-                saveas(gcf,[figdir + participant + '_OutputMeasures_mag' + num2str(mag) + '_direc' + num2str(direc) + '.fig'],'fig')
-                saveas(gcf,[figdir + participant + '_OutputMeasures_mag' + num2str(mag) + '_direc' + num2str(direc) + '.jpg'],'jpg')
-                print(gcf,'-depsc2',[figdir + participant + '_OutputMeasures_mag' + num2str(mag) + '_direc' + num2str(direc) + '.eps'])
-            end
-            
-            
             
         end %mag loop
     end % direction loop
-    close all
+    if closeopt
+        close all
+    end
 end % participant loop
