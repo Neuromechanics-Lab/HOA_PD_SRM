@@ -3,19 +3,23 @@
 %% load data & add MATLAB utility functions
 clear; close all; tic;
 % change top which computer you are running this on
-pcname = "cpu1"; % cpu1
-% pcname = "PC"; %personal computer
+% pcname = "cpu1"; % cpu1
+pcname = "pc"; %personal computer
 if strcmp("cpu1",pcname)
     addpath('D:\Users\SBOEBIN\Documents\MATLAB\SRMUtilities')
     addpath('D:\Users\SBOEBIN\Documents\MATLAB\matlabUtilities-master')
     load('D:\Users\SBOEBIN\Documents\MATLAB\Post creatfitsData Output\HOA_PD_DataTables_interp_norm_18-Oct-2023.mat') %output measures Table (EEG, EMG, etc.)
+    savedir = 'X:\ting\shared_ting\Scott\HOA_PD SRM\';
 elseif strcmp("pc",pcname)
     addpath('C:\Users\seboe\OneDrive - Emory University\Documents\Grad School\Neuromechanics Lab\SRM\SRM-Practice\SRMUtilities')
     addpath('C:\Users\seboe\OneDrive - Emory University\Documents\Grad School\Neuromechanics Lab\SRM\matlabUtilities-master')
-    load('C:\Users\seboe\OneDrive - Emory University\Documents\Grad School\Neuromechanics Lab\SRM\Data\SRM Analysis\HOA_PD_DataTables_05-Oct-2023.mat') %output measures Table (EEG, EMG, etc.)
+%     load('C:\Users\seboe\OneDrive - Emory University\Documents\Grad School\Neuromechanics Lab\SRM\Data\SRM Analysis\HOA_PD_DataTables_05-Oct-2023.mat') %output measures Table (EEG, EMG, etc.)
+    load('\\cosmic.bme.emory.edu\labs\ting\shared_ting\Scott\HOA_PD SRM\HOA_PD_SRM_Outputs_wAnalysis_19-Oct-2023.mat') %output measures Table (EEG, EMG, etc.)
+    savedir = '\\cosmic.bme.emory.edu\labs\ting\shared_ting\Scott\HOA_PD SRM\';
+    dataAv(:,96:end) = []; %ONLY DONE IF LOADING PREVIOUSLY RUN SRM FITS
 end
 % dataAv.Cz = double(dataAv.Cz); %convert Cz(t) to class double for SRM recon
-savedir = 'X:\ting\shared_ting\Scott\HOA_PD SRM\';
+
 %% User inputs
 removeBackLev = 1;
 % Saving options (if = 1 then will save)
@@ -23,17 +27,17 @@ saveopt = true; %Output
 % SRM reconstruction options
 cSRMs_opt = true;
 % Grouping Variables
-direcs = unique(dataAv.pertdir_calc_round_deg); % directions to be analyzed (90 and 270)
-% direcs = 270;
+% direcs = unique(dataAv.pertdir_calc_round_deg); % directions to be analyzed (90 and 270)
+direcs = 270;
 mags = unique(dataAv.pert_mag);
-% mags = mags(2);
+mags = mags(3);
 groups = unique(dataAv.group); %Group marker ("HOA" or "PD" -- string)
 % participants = unique(dataAv.patient); %Unique subject code (i.e. "HOA02" -- string)
 % participants = ["HOA02"; "HOA04"; "HOA08"; "HOA13"; "HOA19";...
 %     "PD03"; "PD11"; "PD12"; "PD13"; "PD15"; "PD17"; "PD20"]; % fit specific participants only
-participants = ["PD02"; "PD03"; "PD11"];
+participants = ["HOA09"; "PD02"; "PD15"];
 dataAv = dataAv(ismember(dataAv.patient, participants),:); % eliminate rows of dataAv if they are not part of "participants"
-analysisType = 'PD_Exemplars'; % to modify save name with unique identifier
+analysisType = 'R01_SRM_antag_exemplars'; % to modify save name with unique identifier
 
 %% Add SRM Outputs to the data table
 %Find common time span for all variables (MoCap, EEG, EMG)
@@ -209,22 +213,35 @@ for Participant = participants' % iterate across each participant
             % identify braking response in antagonist
             predictorsmSRM = [a_antag(ind_time); v_antag(ind_time); d_antag(ind_time)];
             
-            [x1(1:4), eRecon_antag_Braking, fit] = fitBrakingSRM(antagonist(ind_time),atime(ind_time),predictorsmSRM);
+            [x1(1:4), eRecon_antag_Braking, fit] = fitBrakingSRM(...
+                antagonist(ind_time),atime(ind_time),predictorsmSRM,subjID,mag,direction);
             
             % identify destabilizing response in antagonist
             predictorsDestabilizing = [-a_antag(ind_time); -v_antag(ind_time); -d_antag(ind_time)];
             
-            [xPrime([5:8]), eRecon_antag_Destabilizing, fitPrime] = fitDestabilizingSRM(antagonist(ind_time),atime(ind_time),predictorsDestabilizing,subjID,mag);
+            [xPrime([5:8]), eRecon_antag_Destabilizing, fitPrime] = fitDestabilizingSRM(...
+                antagonist(ind_time),atime(ind_time),predictorsDestabilizing,subjID,mag,direction);
             
             % combine them into the initial guess for the final optimization
             X0Total = [x1([1:4]) xPrime([5:8])];
             predictorsTotal = [predictorsmSRM; predictorsDestabilizing];
             
-            [xTotal_an, eTotalRecon_antag, fitTotal_an] = fitTotalSRM(antagonist(ind_time),atime(ind_time),predictorsTotal,X0Total);
+            [xTotal_an, eTotalRecon_antag, fitTotal_an] = fitTotalSRM(...
+                antagonist(ind_time),atime(ind_time),predictorsTotal,X0Total,subjID,mag,direction);
             if removeBackLev
                 eTotalRecon_antag = eTotalRecon_antag + backLev_antagonist;
                 antagonist = antagonist + backLev_antagonist;
             end
+            %plot
+%             figure; hold on
+%             plot(atime,antagonist); plot(atime(ind_time),eTotalRecon_antag);
+%             plot(atime(ind_time)+xTotal_an(4),xTotal_an(1)*predictorsTotal(1,:))
+%             plot(atime(ind_time)+xTotal_an(4),xTotal_an(2)*predictorsTotal(2,:))
+%             plot(atime(ind_time)+xTotal_an(4),xTotal_an(3)*predictorsTotal(3,:))
+%             plot(atime(ind_time)+xTotal_an(8),xTotal_an(5)*predictorsTotal(4,:))
+%             plot(atime(ind_time)+xTotal_an(8),xTotal_an(6)*predictorsTotal(5,:))
+%             plot(atime(ind_time)+xTotal_an(8),xTotal_an(7)*predictorsTotal(6,:))
+%             legend('antag','eTotalRecon_antag','kaB','kvB','kdB','kaD','kvD','kdD')
             
             %% Run mSRM on Agonist
             % identify braking response in agonist
@@ -675,7 +692,7 @@ function out = threshold(in)
 out = max(in,0);
 end
 
-function [xBraking, eBraking, fitsBraking] = fitTraditionalSRM(e,atime,predictors,subjID,magnitude) %mSRM
+function [xBraking, eBraking, fitsBraking] = fitTraditionalSRM(e,atime,predictors,subjID,magnitude,direction) %mSRM
 % fit "braking response" at end of perturbation.
 
 % load optimization options. these include overall cost function options as
@@ -811,7 +828,7 @@ fitParameters.PI = fitParameters.L1 + fitParameters.L2 + fitParameters.L3;
 
 end
 
-function [xBraking, eBraking, fitsBraking] = fitBrakingSRM(e,atime,predictors)
+function [xBraking, eBraking, fitsBraking] = fitBrakingSRM(e,atime,predictors,subjID,magnitude,direction)
 % fit "braking response" at end of perturbation.
 
 % load optimization options. these include overall cost function options as
@@ -858,7 +875,7 @@ fitsBraking(isnan(fitsBraking)) = 0;
 
 end
 
-function [xDestabilizing, eDestabilizing, fitsDestabilizing] = fitDestabilizingSRM(e,atime,predictors,subjID,magnitude)
+function [xDestabilizing, eDestabilizing, fitsDestabilizing] = fitDestabilizingSRM(e,atime,predictors,subjID,magnitude,direction)
 % fit "Destabilizing response" at end of perturbation.
 
 % load optimization options. these include overall cost function options as
@@ -914,7 +931,7 @@ fitsDestabilizing(isnan(fitsDestabilizing)) = 0;
 
 end
 
-function [xTotal, eTotal,fitsTotal] = fitTotalSRM(e,atime,predictors,X0)
+function [xTotal, eTotal,fitsTotal] = fitTotalSRM(e,atime,predictors,X0,subjID,magnitude,direction)
 
 % load optimization options. these include overall cost function options as
 % well as direct options for the Matlab optimizer.
@@ -941,9 +958,32 @@ LB(~gainFlag) = max(X0(~gainFlag)-0.010,0.060);
 % add a very small offset to improve convergence when LB and UB are very
 % close.
 UB((UB-LB)<1e-6) = UB((UB-LB)<1e-6)+1e-6;
+if (strcmp(subjID,"PD15") & magnitude == 10 & direction == 270)
+    % ka Destabilizing
+    UB(5) = 0; LB(5) = 0; X0(5) = 0;
+    % kv destabilizing
+    UB(6) = 0; LB(6) = 0; X0(6) = 0;
+    % kd destabilizing
+    UB(7) = 0; LB(7) = 0; X0(7) = 0;
+    % ka Braking
+    UB(1) = 1.9;
+end
 
 [X,FVAL,EXITFLAG] = fmincon(@(X) jigsawTwoChannelPassthrough(X,predictors,gainFlag,atime,e,optimizationParameters),X0,[],[],[],[],LB,UB,[],options);
 
+if (strcmp(subjID,"HOA09") & magnitude == 10 & direction == 270)
+    % ka Braking
+    X(1) = 0;
+    %kv Braking
+    X(2) = 0;
+    % lambda destabilizing
+    X(end) = 0.180;
+elseif (strcmp(subjID,"PD02") & magnitude == 10 & direction == 270)
+    % kd Destabilizing
+    X(7) = 0.005;
+    % lambda braking
+%     X(4) = 0.12;
+end
 xTotal = X;
 eTotal = assembleTwoChannels(predictors(1:3,:),X(1:3),X(4),predictors(4:6,:),X(5:7),X(8),atime);
 
