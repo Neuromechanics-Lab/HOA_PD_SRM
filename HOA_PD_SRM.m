@@ -35,7 +35,7 @@ groups = unique(dataAv.group); %Group marker ("HOA" or "PD" -- string)
 % participants = unique(dataAv.patient); %Unique subject code (i.e. "HOA02" -- string)
 % participants = ["HOA02"; "HOA04"; "HOA08"; "HOA13"; "HOA19";...
 %     "PD03"; "PD11"; "PD12"; "PD13"; "PD15"; "PD17"; "PD20"]; % fit specific participants only
-participants = ["HOA09"; "PD02"; "PD15"];
+participants = ["HOA09"; "PD02";];
 dataAv = dataAv(ismember(dataAv.patient, participants),:); % eliminate rows of dataAv if they are not part of "participants"
 analysisType = 'R01_SRM_antag_exemplars'; % to modify save name with unique identifier
 
@@ -967,6 +967,13 @@ if (strcmp(subjID,"PD15") & magnitude == 10 & direction == 270)
     UB(7) = 0; LB(7) = 0; X0(7) = 0;
     % ka Braking
     UB(1) = 1.9;
+elseif (strcmp(subjID,"HOA09") & magnitude == 10 & direction == 270)
+    % ka Destabilizing
+    UB(5) = 1.5; LB(5) = 0; X0(5) = 0.5;
+    % kv destabilizing
+    UB(6) = 1; LB(6) = 0.017; X0(6) = 0.02;
+    % kd destabilizing
+    UB(7) = 1; LB(7) = 0.03; %X0(7) = 0.036;
 end
 
 [X,FVAL,EXITFLAG] = fmincon(@(X) jigsawTwoChannelPassthrough(X,predictors,gainFlag,atime,e,optimizationParameters),X0,[],[],[],[],LB,UB,[],options);
