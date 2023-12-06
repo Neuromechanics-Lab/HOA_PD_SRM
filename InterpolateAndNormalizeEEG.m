@@ -1,6 +1,6 @@
 %% script to interpolate and normalize EEG data
 clear; close all
-load('D:\Users\SBOEBIN\Documents\MATLAB\Post creatfitsData Output\HOA_PD_DataTables_18-Oct-2023.mat') %output measures Table (EEG, EMG, etc.)
+load('D:\Users\SBOEBIN\Documents\MATLAB\Post creatfitsData Output\HOA_PD_DataTables_Concatinated_06-Dec-2023.mat') %output measures Table (EEG, EMG, etc.)
 %% interpolate EEG output measures to correspond to dataAv.atime
 % Cz
 % Initialize a matrix to store the interpolated values
@@ -35,11 +35,11 @@ dataAv.alpha_ersp = interpolatedAlpha;
 % Find unique patient values
 uniquePatients = unique(dataAv.patient);
 % Initialize an array to store the normalization coefficients
-Cz_norm_coeff = zeros(size(dataAv.pert_mag));
-beta_norm_coeff = zeros(size(dataAv.pert_mag));
-alpha_norm_coeff = zeros(size(dataAv.pert_mag));
-gamma_norm_coeff = zeros(size(dataAv.pert_mag));
-theta_norm_coeff = zeros(size(dataAv.pert_mag));
+Cz_norm_coeff = zeros(size(dataAv.mag));
+beta_norm_coeff = zeros(size(dataAv.mag));
+alpha_norm_coeff = zeros(size(dataAv.mag));
+gamma_norm_coeff = zeros(size(dataAv.mag));
+theta_norm_coeff = zeros(size(dataAv.mag));
 
 dataAv.Cz_norm = nan(size(dataAv.Cz));
 dataAv.beta_ersp_norm = nan(size(dataAv.beta_ersp));

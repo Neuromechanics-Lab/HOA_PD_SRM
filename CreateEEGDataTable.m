@@ -1,4 +1,4 @@
-%% Script to add in EEG output measures to the createfitsdata.m output table
+%% Script to create EEG output measures table
 clear; close all
 %% Load EEG Data, do time-frequency analysis, put in data table
 % user inputs for time frequency analysis
@@ -12,7 +12,7 @@ Cz = []; beta_ersp = []; gamma_ersp = []; theta_ersp = []; alpha_ersp = [];
 time_erp = []; time_ersp = []; mag = []; direc = []; ID = [];
 % create file list to be loaded
 fdir = 'X:\\ting\\shared_ting\\Scott\\HOA_PD EEG Data\\Condition Epoched\\'; % folder path that contains preprocessed EEG data
-figdir = 'X:\ting\shared_ting\Scott\HOA_PD EEG Data\Condition Epoched\ERSPs\'; % folder path where figrues will be saved
+figdir = 'X:\ting\shared_ting\Scott\HOA_PD EEG Data\Condition Epoched\ERSPs\'; % folder path where figures will be saved
 savefigopt = true;
 files = dir(fullfile(fdir, '*.set'));
 % initialize eeglab
@@ -69,30 +69,4 @@ end
 % create data table of EEG output measures
 T = table(ID, mag, direc, Cz,  beta_ersp,  gamma_ersp,  theta_ersp,  alpha_ersp, time_erp,  time_ersp);
 % save eeg table 
-save(['D:\Users\SBOEBIN\Documents\MATLAB\Post creatfitsData Output\HOA_PD_EEGDataTable_' date '.mat'],'T')
-% load createfitsData.m output
-load('D:\Users\SBOEBIN\Documents\MATLAB\Post creatfitsData Output\HOA_PD_DataTables_05-Oct-2023.mat')
-dataAv = renamevars(dataAv, 'condition', 'pert_mag'); %rename condition to pert_mag for easier use in future
-
-%%% remove participants/conditions that are not shared between tables %%%
-% HOA19 and HOA20 have 4 perturbation magnitudes for a pilot - remove these trials before concatinating
-ind_delete = dataAv.pert_mag == 12;
-dataAv(ind_delete,:) = [];
-% EEG data includes HOA01 and should not due to protocol change - remove
-ind_delete = strcmp(T.ID,"HOA01");
-T(ind_delete,:) = [];
-% EEG data includes PD01 and should not due to protocol change - remove
-ind_delete = strcmp(T.ID,"PD01");
-T(ind_delete,:) = [];
-% dataAv includes HOA10 who is excluded from EEG analysis - remove
-ind_delete = strcmp(dataAv.patient, "HOA10");
-dataAv(ind_delete,:) = [];
-% dataAv includes PD16 who is excluded from EEG analysis due to no platform accelerometer - remove
-ind_delete = strcmp(dataAv.patient, "PD16");
-dataAv(ind_delete,:) = [];
-
-% concatinate EEG table to vicon output table
-dataAv = [dataAv T];
-
-%% save output
-save(['D:\Users\SBOEBIN\Documents\MATLAB\Post creatfitsData Output\HOA_PD_DataTables_' date '.mat'],'dataAv','data','dataSD','participants','-v7.3')
+save(['D:\Users\SBOEBIN\Documents\MATLAB\Post creatfitsData Output\HOA_PD_DataTable_EEG_' date '.mat'],'T')
