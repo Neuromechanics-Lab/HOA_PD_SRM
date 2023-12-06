@@ -13,10 +13,10 @@ if strcmp("cpu1",pcname)
 elseif strcmp("pc",pcname)
     addpath('C:\Users\seboe\OneDrive - Emory University\Documents\Grad School\Neuromechanics Lab\SRM\SRM-Practice\SRMUtilities')
     addpath('C:\Users\seboe\OneDrive - Emory University\Documents\Grad School\Neuromechanics Lab\SRM\matlabUtilities-master')
-%     load('C:\Users\seboe\OneDrive - Emory University\Documents\Grad School\Neuromechanics Lab\SRM\Data\SRM Analysis\HOA_PD_DataTables_05-Oct-2023.mat') %output measures Table (EEG, EMG, etc.)
-    load('\\cosmic.bme.emory.edu\labs\ting\shared_ting\Scott\HOA_PD SRM\HOA_PD_SRM_Outputs_wAnalysis_19-Oct-2023.mat') %output measures Table (EEG, EMG, etc.)
+    load('C:\Users\seboe\OneDrive - Emory University\Documents\Grad School\Neuromechanics Lab\SRM\Data\SRM Analysis\HOA_PD_DataTables_05-Oct-2023.mat') %output measures Table (EEG, EMG, etc.)
+%     load('\\cosmic.bme.emory.edu\labs\ting\shared_ting\Scott\HOA_PD SRM\HOA_PD_SRM_Outputs_wAnalysis_19-Oct-2023.mat') %output measures Table (EEG, EMG, etc.)
     savedir = '\\cosmic.bme.emory.edu\labs\ting\shared_ting\Scott\HOA_PD SRM\';
-    dataAv(:,96:end) = []; %ONLY DONE IF LOADING PREVIOUSLY RUN SRM FITS
+%     dataAv(:,96:end) = []; %ONLY DONE IF LOADING PREVIOUSLY RUN SRM FITS
 end
 % dataAv.Cz = double(dataAv.Cz); %convert Cz(t) to class double for SRM recon
 
@@ -44,10 +44,12 @@ analysisType = 'R01_SRM_antag_exemplars'; % to modify save name with unique iden
 % EEG times (time_eeg and time_ersp are in ms, atime is in s)
 max_time = 1.2;
 min_time = -0.2;
-ind_time = find(dataAv.atime(1,:) > min_time & dataAv.atime(1,:) <= max_time); % adjust window that will be fit by the SRM
+ind_time = find(dataAv.atime(1,:) > min_time & dataAv.atime(1,:) <= max_time); % adjust window that will be fit by the SRM - To do: Add to ouput table
 
 TableHeight = size(dataAv,1);
 ReconLength = length(dataAv.atime(1,ind_time)); %length of SRM Recon
+% Recon Time 
+Recon_time = nan([TableHeight,ReconLength]);
 % Feedback Gains
 Gains_Ag = nan([TableHeight,4]);
 Gains_Antag = nan([TableHeight,8]);
@@ -104,7 +106,7 @@ temp_Table = table(Residual, Gains_Ag, Gains_Antag, Gains_Beta, Gains_Cz, Recon_
     Gains_Residual_Cz, Recon_Residual_Cz, fit_residual_Cz,...
     Gains_Ag_TotalDual_CoM,...
     Recon_Agonist_TotalDual_CoM, fit_agonist_TotalDual_CoM,...
-    Gains_Residual_CoM, Recon_Residual_CoM, fit_residual_CoM,...
+    Gains_Residual_CoM, Recon_Residual_CoM, fit_residual_CoM,Recon_time,...
     'VariableNames',{'Residual','Gains_Ag', 'Gains_Antag', 'Gains_Beta', 'Gains_Cz', 'Recon_Beta', 'Recon_Cz', 'Recon_Agonist',...
     'Recon_Antagonist', 'fit_beta', 'fit_Cz', 'fit_agonist', 'fit_antagonist', 'Gains_Ag_TotalDual_beta',...
     'Recon_Agonist_TotalDual_beta','fit_agonist_TotalDual_beta',...
@@ -113,7 +115,7 @@ temp_Table = table(Residual, Gains_Ag, Gains_Antag, Gains_Beta, Gains_Cz, Recon_
     'Gains_Residual_Cz', 'Recon_Residual_Cz', 'fit_residual_Cz',...
     'Gains_Ag_TotalDual_CoM',...
     'Recon_Agonist_TotalDual_CoM', 'fit_agonist_TotalDual_CoM',...
-    'Gains_Residual_CoM', 'Recon_Residual_CoM', 'fit_residual_CoM'});
+    'Gains_Residual_CoM', 'Recon_Residual_CoM', 'fit_residual_CoM','Recon_time'});
 
 dataAv = [dataAv temp_Table];
 % clear dummy variables from above
@@ -336,6 +338,7 @@ for Participant = participants' % iterate across each participant
             end
             
             %% Put SRM Outputs into dataAv
+            dataAv.Recon_time(ind_cond,:) = atime(ind_time);
             dataAv.Gains_Ag(ind_cond,:) = x_ag;
             dataAv.Gains_Antag(ind_cond,:) = xTotal_an;
             dataAv.Gains_Beta(ind_cond,:) = x_eeg_beta;
