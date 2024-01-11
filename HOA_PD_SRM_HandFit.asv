@@ -2,7 +2,7 @@ function [] = HOA_PD_SRM_HandFit(dataAv, participant, direction, mag, ReconName,
 %HOA_PD_SRM_HANDFIT() to provide hand corrections to SRM reconstruction
 %   Load in SRM output data table and plot the old reconstruction as well
 %   as reconstruction with gains provided in NewGains.
-% Variables: dataAv - SRM output table - Example: load('\\cosmic.bme.emory.edu\labs\ting\shared_ting\Scott\HOA_PD SRM\HOA_PD_SRM_Outputs__06-Dec-2023.mat')
+% Variables: dataAv - SRM output table
 % participant - Participant ID (dataAv.patient)
 % SRMType - SRM that will be hand corrected
 % NewGains - gains selected for hand correction
@@ -16,7 +16,7 @@ addpath('C:\Users\seboe\OneDrive - Emory University\Documents\Grad School\Neurom
 %% index which row of dataAv
 ind_row = find(strcmp(dataAv.patient,participant) & dataAv.pertdir_calc_round_deg == direction & dataAv.mag == mag);
 ind_col = find(strcmp(ReconName,dataAv.Properties.VariableNames));
-%% specify CoM kinematics & Recon time window
+%% specify CoM kinematics & Recon time window 
 atime = dataAv.atime(ind_row,:); % Modify CoM acc with stiction model from Welch and Ting 2009
 a = dataAv.COMAccel_Y(ind_row,:);
 a = stictionTemplate('a',a,'t',atime);
@@ -30,17 +30,10 @@ v = v-mean(v(dataAv.atime(1,:)<-0.1));
 if direction == 90 %forward pert
     a_ag = -a; v_ag = -v; d_ag = -d;
     a_antag = a; v_antag = v; d_antag = d;
-    agonist = dataAv.EMG_TA_L_norm(ind_cond,:); tag_ag='TA'; ag_norm = dataAv.EMG_TA_L_norm(ind_cond,:);
-    antagonist = dataAv.EMG_MGAS_L_norm(ind_cond,:); tag_antag='MG'; antag_norm = dataAv.EMG_MGAS_L_norm(ind_cond,:);
 elseif direction == 270 %backward pert
     a_ag = a; v_ag = v; d_ag = d;
     a_antag = -a; v_antag = -v; d_antag = -d;
-    antagonist = dataAv.EMG_TA_L_norm(ind_cond,:); tag_antag='TA'; antag_norm = dataAv.EMG_TA_L_norm(ind_cond,:);
-    agonist = dataAv.EMG_MGAS_L_norm(ind_cond,:); tag_ag='MG'; ag_norm = dataAv.EMG_MGAS_L_norm(ind_cond,:);
-
 end
-
-% specify time fit by SRM
 max_time = 1.2;
 min_time = -0.2;
 ind_time = find(dataAv.atime(1,:) > min_time & dataAv.atime(1,:) <= max_time); % adjust window that will be fit by the SRM
@@ -50,19 +43,19 @@ if strcmp(ReconName,'Recon_Agonist')
     old_Recon = dataAv.Recon_Agonist(ind_row,:);
     old_Gains = dataAv.Gains_Ag(ind_row,:);
     old_fit = dataAv.fit_agonist(ind_row,:);
-    
+
 elseif strcmp(ReconName,"Recon_Agonist_TotalDual_CoM")
-    
+
 elseif strcmp(ReconName,"Recon_Agonist_TotalDual_Cz")
-    
+
 elseif strcmp(ReconName,"Recon_Agonist_TotalDual_beta")
-    
+
 elseif strcmp(ReconName,"Recon_Cz")
-    
+
 elseif strcmp(ReconName,"Recon_beta")
-    
+
 elseif strcmp(ReconName,"Recon_Antagonist")
-    
+
 else
     error('Specified SRMType is not in dataAv')
 end
