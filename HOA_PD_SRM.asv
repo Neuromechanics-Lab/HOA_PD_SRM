@@ -3,16 +3,19 @@
 %% load data & add MATLAB utility functions
 clear; close all; tic;
 % change top which computer you are running this on
-addpath('D:\Users\SBOEBIN\Documents\MATLAB\SRMUtilities')
-addpath('D:\Users\SBOEBIN\Documents\MATLAB\matlabUtilities-master')
-addpath('C:\Users\seboe\OneDrive - Emory University\Documents\Grad School\Neuromechanics Lab\SRM\SRM-Practice\SRMUtilities')
-addpath('C:\Users\seboe\OneDrive - Emory University\Documents\Grad School\Neuromechanics Lab\SRM\matlabUtilities-master')
+    addpath('D:\Users\SBOEBIN\Documents\MATLAB\SRMUtilities')
+    addpath('D:\Users\SBOEBIN\Documents\MATLAB\matlabUtilities-master')
+    addpath('C:\Users\seboe\OneDrive - Emory University\Documents\Grad School\Neuromechanics Lab\SRM\SRM-Practice\SRMUtilities')
+    addpath('C:\Users\seboe\OneDrive - Emory University\Documents\Grad School\Neuromechanics Lab\SRM\matlabUtilities-master')
+    
+    load('D:\Users\SBOEBIN\Documents\MATLAB\Post creatfitsData Output\HOA_PD_DataTables_interp_norm_18-Oct-2023.mat') %output measures Table (EEG, EMG, etc.)
 
-load('D:\Users\SBOEBIN\Documents\MATLAB\Post creatfitsData Output\HOA_PD_DataTables_interp_norm_06-Dec-2023.mat') %output measures Table (EEG, EMG, etc.)
+    load('C:\Users\seboe\OneDrive - Emory University\Documents\Grad School\Neuromechanics Lab\SRM\Data\SRM Analysis\HOA_PD_DataTables_05-Oct-2023.mat') %output measures Table (EEG, EMG, etc.)
+%     load('\\cosmic.bme.emory.edu\labs\ting\shared_ting\Scott\HOA_PD SRM\HOA_PD_SRM_Outputs_wAnalysis_19-Oct-2023.mat') %output measures Table (EEG, EMG, etc.)
 
 % dataAv.Cz = double(dataAv.Cz); %convert Cz(t) to class double for SRM recon
 savedir = '\\cosmic.bme.emory.edu\labs\ting\shared_ting\Scott\HOA_PD SRM\';
-
+%     dataAv(:,96:end) = []; %ONLY DONE IF LOADING PREVIOUSLY RUN SRM FITS
 %% User inputs
 removeBackLev = 1;
 % Saving options (if = 1 then will save)
@@ -20,17 +23,17 @@ saveopt = true; %Output
 % SRM reconstruction options
 cSRMs_opt = true;
 % Grouping Variables
-direcs = unique(dataAv.pertdir_calc_round_deg); % directions to be analyzed (90 and 270)
-% direcs = 270;
-mags = unique(dataAv.condition);
-% mags = mags(3);
-% groups = unique(dataAv.group); %Group marker ("HOA" or "PD" -- string)
-participants = unique(dataAv.patient); %Unique subject code (i.e. "HOA02" -- string)
+% direcs = unique(dataAv.pertdir_calc_round_deg); % directions to be analyzed (90 and 270)
+direcs = 270;
+mags = unique(dataAv.pert_mag);
+mags = mags(3);
+groups = unique(dataAv.group); %Group marker ("HOA" or "PD" -- string)
+% participants = unique(dataAv.patient); %Unique subject code (i.e. "HOA02" -- string)
 % participants = ["HOA02"; "HOA04"; "HOA08"; "HOA13"; "HOA19";...
 %     "PD03"; "PD11"; "PD12"; "PD13"; "PD15"; "PD17"; "PD20"]; % fit specific participants only
-% participants = ["HOA09"; "PD02";];
+participants = ["HOA09"; "PD02";];
 dataAv = dataAv(ismember(dataAv.patient, participants),:); % eliminate rows of dataAv if they are not part of "participants"
-analysisType = ''; % to modify save name with unique identifier
+analysisType = 'R01_SRM_antag_exemplars'; % to modify save name with unique identifier
 
 %% Add SRM Outputs to the data table
 %Find common time span for all variables (MoCap, EEG, EMG)
@@ -137,7 +140,7 @@ for Participant = participants' % iterate across each participant
             %condition index - to pull correct variables for SRM
             %analysis (i.e. correct row in dataAv)
             ind_cond = find(dataAv.patient == Participant & ...
-                dataAv.pertdir_calc_round_deg == direction & dataAv.condition == mag);
+                dataAv.pertdir_calc_round_deg == direction & dataAv.pert_mag == mag);
             
             % Break if there are no participants that fit the unique group/participant
             if isempty(ind_cond)
