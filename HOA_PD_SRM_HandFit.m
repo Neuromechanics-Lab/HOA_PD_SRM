@@ -2,7 +2,7 @@ function [] = HOA_PD_SRM_HandFit(dataAv,participant, direction, ReconName,NewGai
 %HOA_PD_SRM_HANDFIT() to provide hand corrections to SRM reconstruction
 %   Load in SRM output data table and plot the old reconstruction as well
 %   as reconstruction with gains provided in NewGains.
-% Variables: dataAv - SRM output table
+% Variables: dataAv - SRM output table - Example: load('\\cosmic.bme.emory.edu\labs\ting\shared_ting\Scott\HOA_PD SRM\HOA_PD_SRM_Outputs__06-Dec-2023.mat')
 % participant - Participant ID (dataAv.patient)
 % SRMType - SRM that will be hand corrected
 % NewGains - gains selected for hand correction
