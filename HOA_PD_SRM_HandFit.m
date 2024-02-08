@@ -125,7 +125,7 @@ end
 New_fit = [NaN NaN];
 New_fit(1) = rsqr(measuredData',New_Recon');
 New_fit(2) = rsqr_uncentered(measuredData',New_Recon');
-output = table(participant, direction, mag, ReconName, Old_Gains, New_Gains, New_fit, New_Recon);
+output = table(participant, direction, mag, ReconName, New_Gains, New_fit, New_Recon, Old_Gains, Old_Recon);
 %% plot Old and New SRM Recons
 backLev = mean(measuredData(atime < -0.1),'omitnan');
 title_string = {participant + " Mag: " + string(mag) + " direc: " + string(direction) + " " + ReconName};
