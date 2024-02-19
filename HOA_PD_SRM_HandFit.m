@@ -129,7 +129,7 @@ output = table(participant, direction, mag, ReconName, New_Gains, New_fit, New_R
 %% plot Old and New SRM Recons
 backLev = mean(measuredData(atime(ind_time) < -0.1),'omitnan');
 title_string = {participant + " Mag: " + string(mag) + " direc: " + string(direction) + " " + ReconName};
-figure
+figure; set(gcf,'WindowStyle','docked')
 %% Old Recon
 plotij(2,1,1,1); hold on
 plot(atime(ind_time),measuredData,'b','LineWidth',2) % raw data
