@@ -14,10 +14,10 @@ function [output] = HOA_PD_SRM_HandFit(dataAv, participant, direction, mag, Reco
 % new SRM reconstruction based on NewGains specified by the user
 
 %% Add Utilities folders - May give warnings depending on which PC you are using
-addpath('D:\Users\SBOEBIN\Documents\MATLAB\SRMUtilities')
-addpath('D:\Users\SBOEBIN\Documents\MATLAB\matlabUtilities-master')
-% addpath('C:\Users\seboe\OneDrive - Emory University\Documents\Grad School\Neuromechanics Lab\SRM\SRM-Practice\SRMUtilities')
-% addpath('C:\Users\seboe\OneDrive - Emory University\Documents\Grad School\Neuromechanics Lab\SRM\matlabUtilities-master')
+% addpath('D:\Users\SBOEBIN\Documents\MATLAB\SRMUtilities')
+% addpath('D:\Users\SBOEBIN\Documents\MATLAB\matlabUtilities-master')
+addpath('C:\Users\seboe\OneDrive - Emory University\Documents\Grad School\Neuromechanics Lab\SRM\SRM-Practice\SRMUtilities')
+addpath('C:\Users\seboe\OneDrive - Emory University\Documents\Grad School\Neuromechanics Lab\SRM\matlabUtilities-master')
 %% index which row of dataAv
 ind_row = find(strcmp(dataAv.patient,participant) & dataAv.pertdir_calc_round_deg == direction & dataAv.condition == mag); % participant/condition index
 % ind_col = find(strcmp(ReconName,dataAv.Properties.VariableNames)); % Recon index
