@@ -45,19 +45,19 @@ end
 
 [X,FVAL,EXITFLAG] = fmincon(@(X) jigsawTwoChannelPassthrough(X,predictors,gainFlag,atime,e,optimizationParameters),X0,[],[],[],[],LB,UB,[],options);
 
-if (strcmp(subjID,"HOA09") & magnitude == 10 & direction == 270)
-    % ka Braking
-    X(1) = 0;
-    %kv Braking
-    X(2) = 0;
-    % lambda destabilizing
-    X(end) = 0.180;
-elseif (strcmp(subjID,"PD02") & magnitude == 10 & direction == 270)
-    % kd Destabilizing
-    X(7) = 0.005;
-    % lambda braking
-%     X(4) = 0.12;
-end
+% if (strcmp(subjID,"HOA09") & magnitude == 10 & direction == 270)
+%     % ka Braking
+%     X(1) = 0;
+%     %kv Braking
+%     X(2) = 0;
+%     % lambda destabilizing
+%     X(end) = 0.180;
+% elseif (strcmp(subjID,"PD02") & magnitude == 10 & direction == 270)
+%     % kd Destabilizing
+%     X(7) = 0.005;
+%     % lambda braking
+% %     X(4) = 0.12;
+% end
 xTotal = X;
 eTotal = assembleTwoChannels(predictors(1:3,:),X(1:3),X(4),predictors(4:6,:),X(5:7),X(8),atime);
 

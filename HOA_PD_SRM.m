@@ -3,9 +3,9 @@
 %% load data & add MATLAB utility functions
 clear; close all; tic;
 % change top which computer you are running this on
-addpath('D:\Users\SBOEBIN\Documents\MATLAB\SRMUtilities')
+% addpath('D:\Users\SBOEBIN\Documents\MATLAB\SRMUtilities')
 addpath('D:\Users\SBOEBIN\Documents\MATLAB\matlabUtilities-master')
-addpath('C:\Users\seboe\OneDrive - Emory University\Documents\Grad School\Neuromechanics Lab\SRM\SRM-Practice\SRMUtilities')
+% addpath('C:\Users\seboe\OneDrive - Emory University\Documents\Grad School\Neuromechanics Lab\SRM\SRM-Practice\SRMUtilities')
 addpath('C:\Users\seboe\OneDrive - Emory University\Documents\Grad School\Neuromechanics Lab\SRM\matlabUtilities-master')
 
 load('D:\Users\SBOEBIN\Documents\MATLAB\Post creatfitsData Output\HOA_PD_DataTables_interp_norm_06-Dec-2023.mat') %output measures Table (EEG, EMG, etc.)
@@ -15,7 +15,7 @@ savedir = '\\cosmic.bme.emory.edu\labs\ting\shared_ting\Scott\HOA_PD SRM\';
 
 %% User inputs
 removeBackLev = 1;
-% Saving options (if = 1 then will save)
+% Saving options (if true then will save output)
 saveopt = true; %Output
 % SRM reconstruction options
 cSRMs_opt = true;
@@ -204,12 +204,22 @@ for Participant = participants' % iterate across each participant
                 end
             end
             
+            %% Run mSRM on Agonist
+            % identify braking response in agonist
+            predictorsmSRM = [a_ag(ind_time); v_ag(ind_time); d_ag(ind_time)];
+            
+            [x_ag([1:4]), eRecon_ag, fit_ag] = fitTraditionalSRM(agonist(ind_time),atime(ind_time),predictorsmSRM,subjID,mag,direction);
+            if removeBackLev
+                eRecon_ag = eRecon_ag + backLev_agonist;
+                agonist = agonist + backLev_agonist;
+            end
+
             %% Run SRM on Antagonist
             % identify braking response in antagonist
-            predictorsmSRM = [a_antag(ind_time); v_antag(ind_time); d_antag(ind_time)];
+            predictorsBraking = [a_antag(ind_time); v_antag(ind_time); d_antag(ind_time)];
             
             [x1(1:4), eRecon_antag_Braking, fit] = fitBrakingSRM(...
-                antagonist(ind_time),atime(ind_time),predictorsmSRM,subjID,mag,direction);
+                antagonist(ind_time),atime(ind_time),predictors_antag,subjID,mag,direction);
             
             % identify destabilizing response in antagonist
             predictorsDestabilizing = [-a_antag(ind_time); -v_antag(ind_time); -d_antag(ind_time)];
@@ -219,33 +229,13 @@ for Participant = participants' % iterate across each participant
             
             % combine them into the initial guess for the final optimization
             X0Total = [x1([1:4]) xPrime([5:8])];
-            predictorsTotal = [predictorsmSRM; predictorsDestabilizing];
+            predictorsTotal = [predictorsBraking; predictorsDestabilizing];
             
             [xTotal_an, eTotalRecon_antag, fitTotal_an] = fitTotalSRM(...
                 antagonist(ind_time),atime(ind_time),predictorsTotal,X0Total,subjID,mag,direction);
             if removeBackLev
                 eTotalRecon_antag = eTotalRecon_antag + backLev_antagonist;
                 antagonist = antagonist + backLev_antagonist;
-            end
-            %plot
-%             figure; hold on
-%             plot(atime,antagonist); plot(atime(ind_time),eTotalRecon_antag);
-%             plot(atime(ind_time)+xTotal_an(4),xTotal_an(1)*predictorsTotal(1,:))
-%             plot(atime(ind_time)+xTotal_an(4),xTotal_an(2)*predictorsTotal(2,:))
-%             plot(atime(ind_time)+xTotal_an(4),xTotal_an(3)*predictorsTotal(3,:))
-%             plot(atime(ind_time)+xTotal_an(8),xTotal_an(5)*predictorsTotal(4,:))
-%             plot(atime(ind_time)+xTotal_an(8),xTotal_an(6)*predictorsTotal(5,:))
-%             plot(atime(ind_time)+xTotal_an(8),xTotal_an(7)*predictorsTotal(6,:))
-%             legend('antag','eTotalRecon_antag','kaB','kvB','kdB','kaD','kvD','kdD')
-            
-            %% Run mSRM on Agonist
-            % identify braking response in agonist
-            predictorsmSRM = [a_ag(ind_time); v_ag(ind_time); d_ag(ind_time)];
-            
-            [x_ag([1:4]), eRecon_ag, fit_ag] = fitTraditionalSRM(agonist(ind_time),atime(ind_time),predictorsmSRM,subjID,mag);
-            if removeBackLev
-                eRecon_ag = eRecon_ag + backLev_agonist;
-                agonist = agonist + backLev_agonist;
             end
             
             %% Calculate Residuals
