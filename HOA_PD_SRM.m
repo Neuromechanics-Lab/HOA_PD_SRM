@@ -219,7 +219,7 @@ for Participant = participants' % iterate across each participant
             predictorsBraking = [a_antag(ind_time); v_antag(ind_time); d_antag(ind_time)];
             
             [x1(1:4), eRecon_antag_Braking, fit] = fitBrakingSRM(...
-                antagonist(ind_time),atime(ind_time),predictors_antag,subjID,mag,direction);
+                antagonist(ind_time),atime(ind_time),predictorsBraking,subjID,mag,direction);
             
             % identify destabilizing response in antagonist
             predictorsDestabilizing = [-a_antag(ind_time); -v_antag(ind_time); -d_antag(ind_time)];
@@ -289,7 +289,7 @@ for Participant = participants' % iterate across each participant
             %% Fit dual SRM (fit EMG w/ double CoM Feedback)
             X0Dual = [x_ag(1:4) x_residual_CoM(1:4)];
             predictorsDual_CoM = [predictorsmSRM; predictorsmSRM];
-            [xTotal_ag_dual_CoM, eTotalRecon_ag_dual_CoM, fitTotal_ag_dual_CoM] = fitTotalDualSRM_CoM(agonist(ind_time), atime(ind_time), predictorsDual_CoM, X0Dual, subjID, mag);
+            [xTotal_ag_dual_CoM, eTotalRecon_ag_dual_CoM, fitTotal_ag_dual_CoM] = fitTotalDualSRM_CoM(agonist(ind_time), atime(ind_time), predictorsDual_CoM, X0Dual, subjID, mag, direction);
             if removeBackLev
                 eTotalRecon_ag_dual_CoM = eTotalRecon_ag_dual_CoM + backLev_agonist;
             end

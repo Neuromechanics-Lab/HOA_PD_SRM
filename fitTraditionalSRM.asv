@@ -31,10 +31,7 @@ if isempty(src) % if this participant/direction/magnitude hasn't been hand fit u
     LB = [ 0.0 0.00 0.00 0.060];
 elseif ~isempty(src)
     load(src.folder + "\" + src.name)
-    X0 = output.New_Gains(1:4); % only use the first four gains since TraditionalSRM only has one feedback loop
-    % set bounds to be +/- 10% of hand fit value 
-    UB = 1.1*X0;
-    LB = 0.9*X0;
+    X0 = output.ne
     
 end
 

@@ -14,11 +14,8 @@ figdir = 'X:\ting\shared_ting\Scott\HOA_PD SRM\savedfigs\';
 % comparison (1 per direction), SRM components, (1 per direction
 participants = unique(dataAv.patient);
 direcs = unique(dataAv.pertdir_calc_round_deg);
-try
-    mags = unique(dataAv.pert_mag);
-catch
-    mags =  unique(dataAv.condition);
-end
+mags = unique(dataAv.pert_mag);
+
 max_time = 1.2;
 min_time = -0.2;
 ind_time = find(dataAv.atime(1,:) > min_time & dataAv.atime(1,:) <= max_time); % adjust window that will be fit by the SRM
@@ -29,11 +26,8 @@ for i = 1:length(participants) %participant loop
         direc = direcs(ii);
         for iii = 1:length(mags)
             mag = mags(iii);
-            try
-                ind_cond = find(strcmp(dataAv.patient,participant) & dataAv.pertdir_calc_round_deg == direc & dataAv.pert_mag == mag);
-            catch
-                ind_cond = find(strcmp(dataAv.patient,participant) & dataAv.pertdir_calc_round_deg == direc & dataAv.condition == mag);
-            end
+            ind_cond = find(strcmp(dataAv.patient,participant) & dataAv.pertdir_calc_round_deg == direc & dataAv.pert_mag == mag);
+            
             %specify which muscle is acting as an agonist/antagonist
             if direc == 90 %forward pert
                 agonist = dataAv.EMG_TA_L_norm(ind_cond,:); tag_ag='TA'; ag_norm = dataAv.EMG_TA_L_norm(ind_cond,:);
@@ -126,32 +120,32 @@ for i = 1:length(participants) %participant loop
             set(ax2,'YLim',yl)
             set(ax_all,'YLim',yl)
             
-            if savefigopt
-                saveas(gcf,[figdir + participant + '_DualSRMCompare_mag' + num2str(mag) + '_direc' + num2str(direc) + '_' + date + '.fig'],'fig')
-                saveas(gcf,[figdir + participant + '_DualSRMCompare_mag' + num2str(mag) + '_direc' + num2str(direc) + '_' + date + '.jpg'],'jpg')
-                print(gcf,'-depsc2',[figdir + participant + '_DualSRMCompare_mag' + num2str(mag) + '_direc' + num2str(direc) + '_' + date + '.eps'])
-            end
+%             if savefigopt
+%                 saveas(gcf,[figdir + participant + '_DualSRMCompare_mag' + num2str(mag) + '_direc' + num2str(direc) + '.fig'],'fig')
+%                 saveas(gcf,[figdir + participant + '_DualSRMCompare_mag' + num2str(mag) + '_direc' + num2str(direc) + '.jpg'],'jpg')
+%                 print(gcf,'-depsc2',[figdir + participant + '_DualSRMCompare_mag' + num2str(mag) + '_direc' + num2str(direc) + '.eps'])
+%             end
             
             
-            %             %% plot Output variables
-            %             figure(i + iii + direc + 10000); set(gcf,'WindowState','maximized');
-            %             plotij(5,1,1,1)
-            %             plot(atime,dataAv.COMAccel_Y(ind_cond,:)); ylabel('CoM - Acc (g)')
-            %             plotij(5,1,2,1)
-            %             plot(atime,dataAv.beta_ersp(ind_cond,:)); ylabel('beta (nu)')
-            %             plotij(5,1,3,1)
-            %             plot(atime,agonist); ylim(yl); ylabel('agonist (nu)')
-            %             plotij(5,1,4,1)
-            %             plot(atime,antagonist); ylim(yl); ylabel('antagonist (nu)')
-            %             plotij(5,1,5,1)
-            %             plot(atime,dataAv.COMPosminusLVDT_Y(ind_cond,:)); ylabel('CoM - Pos (cm)')
-            %             xlabel('time (s)')
-            %             sgtitle([participant + ' Mag' + num2str(mag) + " direc" + num2str(direc)])
-            %             if savefigopt
-            %                 saveas(gcf,[figdir + participant + '_OutputMeasures_mag' + num2str(mag) + '_direc' + num2str(direc) + '.fig'],'fig')
-            %                 saveas(gcf,[figdir + participant + '_OutputMeasures_mag' + num2str(mag) + '_direc' + num2str(direc) + '.jpg'],'jpg')
-            %                 print(gcf,'-depsc2',[figdir + participant + '_OutputMeasures_mag' + num2str(mag) + '_direc' + num2str(direc) + '.eps'])
-            %             end
+%             %% plot Output variables
+%             figure(i + iii + direc + 10000); set(gcf,'WindowState','maximized');
+%             plotij(5,1,1,1)
+%             plot(atime,dataAv.COMAccel_Y(ind_cond,:)); ylabel('CoM - Acc (g)')
+%             plotij(5,1,2,1)
+%             plot(atime,dataAv.beta_ersp(ind_cond,:)); ylabel('beta (nu)')
+%             plotij(5,1,3,1)
+%             plot(atime,agonist); ylim(yl); ylabel('agonist (nu)')
+%             plotij(5,1,4,1)
+%             plot(atime,antagonist); ylim(yl); ylabel('antagonist (nu)')
+%             plotij(5,1,5,1)
+%             plot(atime,dataAv.COMPosminusLVDT_Y(ind_cond,:)); ylabel('CoM - Pos (cm)')
+%             xlabel('time (s)')
+%             sgtitle([participant + ' Mag' + num2str(mag) + " direc" + num2str(direc)])
+%             if savefigopt
+%                 saveas(gcf,[figdir + participant + '_OutputMeasures_mag' + num2str(mag) + '_direc' + num2str(direc) + '.fig'],'fig')
+%                 saveas(gcf,[figdir + participant + '_OutputMeasures_mag' + num2str(mag) + '_direc' + num2str(direc) + '.jpg'],'jpg')
+%                 print(gcf,'-depsc2',[figdir + participant + '_OutputMeasures_mag' + num2str(mag) + '_direc' + num2str(direc) + '.eps'])
+%             end
             
             %% plot Components for hSRM-CoM
             backLev_agonist = mean(agonist(atime < -0.1),'omitnan');
@@ -191,9 +185,9 @@ for i = 1:length(participants) %participant loop
             xlim([-0.2 1.4]); ylim([-1 1])
             
             if savefigopt
-                saveas(gcf,[figdir + participant + '_hSRM_CoM_Comps_mag' + num2str(mag) + '_direc' + num2str(direc) + '_' + date + '.fig'],'fig')
-                saveas(gcf,[figdir + participant + '_hSRM_CoM_Comps_mag' + num2str(mag) + '_direc' + num2str(direc) + '_' + date +  '.jpg'],'jpg')
-                print(gcf,'-depsc2',[figdir + participant + '_hSRM_CoM_Comps_mag' + num2str(mag) + '_direc' + num2str(direc) + '_' + date +  '.eps'])
+                saveas(gcf,[figdir + participant + '_hSRM_CoM_Comps_mag' + num2str(mag) + '_direc' + num2str(direc) + '.fig'],'fig')
+                saveas(gcf,[figdir + participant + '_hSRM_CoM_Comps_mag' + num2str(mag) + '_direc' + num2str(direc) + '.jpg'],'jpg')
+                print(gcf,'-depsc2',[figdir + participant + '_hSRM_CoM_Comps_mag' + num2str(mag) + '_direc' + num2str(direc) + '.eps'])
             end
             
         end %mag loop

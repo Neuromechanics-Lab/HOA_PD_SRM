@@ -1,4 +1,4 @@
-function [xTotal, eTotal,fitsTotal] = fitTotalDualSRM_CoM(e,atime,predictors,X0,subjID,magnitude)
+function [xTotal, eTotal,fitsTotal] = fitTotalDualSRM_CoM(e,atime,predictors,X0,subjID,magnitude, direction)
 
 % load optimization options. these include overall cost function options as
 % well as direct options for the Matlab optimizer.
@@ -13,6 +13,7 @@ options = optimoptions('fmincon',...
 
 % allow the gains to vary within +/-XX%, allow the delays to vary within +/- 20 msec. note that lower bound for gains must be positive.
 gainFlag = [true true true false true true true false];
+
 % UB(gainFlag) = 1.5*X0(gainFlag);
 UB(gainFlag) = [1.1, 1.5, 1.5,   1.1, 1.5, 1.5].*X0(gainFlag); % first vector are the weights to allow for wiggle room on bounds for gains. - Keep 1.1 the same for kas
 % LB(gainFlag) = max(0.9*X0(gainFlag),0);
@@ -25,14 +26,23 @@ LB(gainFlag) = [0.9, 0, 0,    0.9, 0.0, 0.0].*X0(gainFlag); % first vector are t
 UB(~gainFlag) = min(X0(~gainFlag)+0.010,0.250);
 LB(~gainFlag) = max(X0(~gainFlag)-0.010,0.060);
 
-% try to hand fit participants
-if (strcmp(subjID,'HOA19') & magnitude == 7.5)
-    %lambda2
-    UB(end) = 0.250; X0(end) = 0.200;
-    %ka1
-    UB(1) = 4.9; LB(1) = 4.7; X0(1) = 4.8;
-    %ka2
-    UB(5) = 3.5; LB(5) = 2.4; X0(5) = 2.7;
+% Load in participant hand fits
+src = dir("X:\ting\shared_ting\Scott\HOA_PD SRM\HOA_PD_SRM_HandFit_Outputs");
+ind_rmv = [];
+txt_string = subjID + "_" + num2str(direction) + "_" + num2str(magnitude) +  "_Recon_Agonist_TotalDual_CoM";
+for i = 1:size(src,1)
+    if ~contains(src(i).name, txt_string)% remove rows not containing participant, direction, and magnitude
+        ind_rmv = [ind_rmv; i];
+    end
+end
+src(ind_rmv,:) = [];
+
+if ~isempty(src)
+    load(src.folder + "\" + src.name)
+    X0 = output.New_Gains;
+    % set bounds to be +/- 10% of hand fit value 
+    UB = 1.1*X0;
+    LB = 0.9*X0;
 end
 
 % add a very small offset to improve convergence when LB and UB are very
