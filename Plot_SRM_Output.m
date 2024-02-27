@@ -57,7 +57,7 @@ for i = 1:length(participants) %participant loop
             d = d-mean(d(dataAv.atime(1,:)<-0.1));
             v = v-mean(v(dataAv.atime(1,:)<-0.1));
             
-            % flip the CoM kinematic signal depending on pert direction            
+            % flip the CoM kinematic signal depending on pert direction
             if direc == 90 %forward pert
                 a_ag = -a; v_ag = -v; d_ag = -d;
                 a_antag = a; v_antag = v; d_antag = d;
@@ -69,7 +69,8 @@ for i = 1:length(participants) %participant loop
             yl = [0 1];
             figure(i*100 + iii*1000 + direc + 10000); set(gcf,'WindowState','maximized');
             %mSRM
-            ax1 = plotij(4,2,1,1); hold on
+            % ax1 = plotij(4,2,1,1); hold on % w/ cortical SRMS
+            ax1 = plotij(2,2,1,1); hold on % w/o cortical SRMS
             plot(atime,agonist,'Color', [0.5 0.5 0.5],'LineWidth',2)
             plot(atime(ind_time),dataAv.Recon_Agonist(ind_cond,:),'r','LineWidth',2)
             title_string = {['mSRM']...
@@ -79,7 +80,8 @@ for i = 1:length(participants) %participant loop
             legend('Data','mSRM'); ylabel([tag_ag ' EMG']);
             
             %hSRM - CoM
-            ax2 = plotij(4,2,2,1); hold on
+            % ax2 = plotij(4,2,2,1); hold on % w/ cortical SRMS
+            ax2 = plotij(2,2,2,1); hold on % w/o cortical SRMS
             plot(atime,agonist,'Color', [0.5 0.5 0.5],'LineWidth',2)
             plot(atime(ind_time),dataAv.Recon_Agonist_TotalDual_CoM(ind_cond,:),'k','LineWidth',2)
             title_string = {['hSRM - CoM']...
@@ -91,34 +93,34 @@ for i = 1:length(participants) %participant loop
             legend('Data','hSRM (CoM)'); ylabel([tag_ag ' EMG']); xlabel('Time (s)');
             
             % hSRM - Cz
-            ax3 = plotij(4,2,3,1); hold on
-            plot(atime,agonist,'Color', [0.5 0.5 0.5],'LineWidth',2)
-            plot(atime(ind_time),dataAv.Recon_Agonist_TotalDual_Cz(ind_cond,:),'b','LineWidth',2)
-            title_string = {['hSRM - Cz']...
-                [sprintf('k_{a1}=%1.2g', dataAv.Gains_Ag_TotalDual_Cz(ind_cond,1)) ' ' sprintf('k_{v1}=%1.2g',dataAv.Gains_Ag_TotalDual_Cz(ind_cond,2))...
-                ' ' sprintf('k_{d1}=%1.2g',dataAv.Gains_Ag_TotalDual_Cz(ind_cond,3)) '      ' sprintf('k_{Cz}=%1.2g',dataAv.Gains_Ag_TotalDual_Cz(ind_cond,5))]...
-                [sprintf('R^{2} = %1.2g',dataAv.fit_agonist_TotalDual_Cz(ind_cond,1)) '      ' sprintf('VAF = %1.2g',dataAv.fit_agonist_TotalDual_Cz(ind_cond,2))]};
-            title(title_string)
-            legend('Data','hSRM (Cz)'); ylabel([tag_ag ' EMG']); xlabel('Time (s)');
+            %             ax3 = plotij(4,2,3,1); hold on
+            %             plot(atime,agonist,'Color', [0.5 0.5 0.5],'LineWidth',2)
+            %             plot(atime(ind_time),dataAv.Recon_Agonist_TotalDual_Cz(ind_cond,:),'b','LineWidth',2)
+            %             title_string = {['hSRM - Cz']...
+            %                 [sprintf('k_{a1}=%1.2g', dataAv.Gains_Ag_TotalDual_Cz(ind_cond,1)) ' ' sprintf('k_{v1}=%1.2g',dataAv.Gains_Ag_TotalDual_Cz(ind_cond,2))...
+            %                 ' ' sprintf('k_{d1}=%1.2g',dataAv.Gains_Ag_TotalDual_Cz(ind_cond,3)) '      ' sprintf('k_{Cz}=%1.2g',dataAv.Gains_Ag_TotalDual_Cz(ind_cond,5))]...
+            %                 [sprintf('R^{2} = %1.2g',dataAv.fit_agonist_TotalDual_Cz(ind_cond,1)) '      ' sprintf('VAF = %1.2g',dataAv.fit_agonist_TotalDual_Cz(ind_cond,2))]};
+            %             title(title_string)
+            %             legend('Data','hSRM (Cz)'); ylabel([tag_ag ' EMG']); xlabel('Time (s)');
             
             % hSRM - beta
-            ax4 = plotij(4,2,4,1); hold on
-            plot(atime,agonist,'Color', [0.5 0.5 0.5],'LineWidth',2)
-            plot(atime(ind_time),dataAv.Recon_Agonist_TotalDual_beta(ind_cond,:),'g','LineWidth',2)
-            title_string = {['hSRM - Cz']...
-                [sprintf('k_{a1}=%1.2g', dataAv.Gains_Ag_TotalDual_beta(ind_cond,1)) ' ' sprintf('k_{v1}=%1.2g',dataAv.Gains_Ag_TotalDual_beta(ind_cond,2))...
-                ' ' sprintf('k_{d1}=%1.2g',dataAv.Gains_Ag_TotalDual_beta(ind_cond,3)) '      ' sprintf('k_{beta}=%1.2g',dataAv.Gains_Ag_TotalDual_beta(ind_cond,5))]...
-                [sprintf('R^{2} = %1.2g',dataAv.fit_agonist_TotalDual_beta(ind_cond,1)) '      ' sprintf('VAF = %1.2g',dataAv.fit_agonist_TotalDual_beta(ind_cond,2))]};
-            title(title_string)
-            legend('Data','hSRM (beta)'); ylabel([tag_ag ' EMG']); xlabel('Time (s)');
+            %             ax4 = plotij(4,2,4,1); hold on
+            %             plot(atime,agonist,'Color', [0.5 0.5 0.5],'LineWidth',2)
+            %             plot(atime(ind_time),dataAv.Recon_Agonist_TotalDual_beta(ind_cond,:),'g','LineWidth',2)
+            %             title_string = {['hSRM - Cz']...
+            %                 [sprintf('k_{a1}=%1.2g', dataAv.Gains_Ag_TotalDual_beta(ind_cond,1)) ' ' sprintf('k_{v1}=%1.2g',dataAv.Gains_Ag_TotalDual_beta(ind_cond,2))...
+            %                 ' ' sprintf('k_{d1}=%1.2g',dataAv.Gains_Ag_TotalDual_beta(ind_cond,3)) '      ' sprintf('k_{beta}=%1.2g',dataAv.Gains_Ag_TotalDual_beta(ind_cond,5))]...
+            %                 [sprintf('R^{2} = %1.2g',dataAv.fit_agonist_TotalDual_beta(ind_cond,1)) '      ' sprintf('VAF = %1.2g',dataAv.fit_agonist_TotalDual_beta(ind_cond,2))]};
+            %             title(title_string)
+            %             legend('Data','hSRM (beta)'); ylabel([tag_ag ' EMG']); xlabel('Time (s)');
             
             % all on same plot
             ax_all = plotij(1,2,1,2); hold on
             plot(atime,agonist,'Color', [0.5 0.5 0.5],'LineWidth',2)
             plot(atime(ind_time),dataAv.Recon_Agonist(ind_cond,:),'r','LineWidth',2)
             plot(atime(ind_time),dataAv.Recon_Agonist_TotalDual_CoM(ind_cond,:),'k','LineWidth',2)
-            plot(atime(ind_time),dataAv.Recon_Agonist_TotalDual_Cz(ind_cond,:),'b','LineWidth',2)
-            plot(atime(ind_time),dataAv.Recon_Agonist_TotalDual_beta(ind_cond,:),'g','LineWidth',2)
+%             plot(atime(ind_time),dataAv.Recon_Agonist_TotalDual_Cz(ind_cond,:),'b','LineWidth',2)
+%             plot(atime(ind_time),dataAv.Recon_Agonist_TotalDual_beta(ind_cond,:),'g','LineWidth',2)
             title('All SRMs'); ylabel([tag_ag ' EMG']); xlabel('Time (s)');
             %             legend('Data','mSRM','dSRM (beta)','dSRM (Cz)','dSRM (CoM')
             legend('Data','mSRM','hSRM (CoM')
@@ -156,7 +158,7 @@ for i = 1:length(participants) %participant loop
             
             %% plot Components for hSRM-CoM
             backLev_agonist = mean(agonist(atime < -0.1),'omitnan');
-            figure; hold on
+            figure; hold on; set(gcf,'WindowState','maximized');
             plot(atime,agonist,'Color', [0.5 0.5 0.5],'LineWidth',2)
             plot(atime(ind_time),dataAv.Recon_Agonist_TotalDual_CoM(ind_cond,:),...
                 'k','LineWidth',2)
@@ -174,21 +176,24 @@ for i = 1:length(participants) %participant loop
             %plot ctx components
             plot(atime(ind_time)+dataAv.Gains_Ag_TotalDual_CoM(ind_cond,8),...
                 a_ag(ind_time)*dataAv.Gains_Ag_TotalDual_CoM(ind_cond,5)+backLev_agonist,...
-                'g-','LineWidth',1)
+                'r-','LineWidth',1)
             plot(atime(ind_time)+dataAv.Gains_Ag_TotalDual_CoM(ind_cond,8),...
                 v_ag(ind_time)*dataAv.Gains_Ag_TotalDual_CoM(ind_cond,6)+backLev_agonist,...
-                'g.-','LineWidth',1)
+                'r.-','LineWidth',1)
             plot(atime(ind_time)+dataAv.Gains_Ag_TotalDual_CoM(ind_cond,8),...
                 d_ag(ind_time)*dataAv.Gains_Ag_TotalDual_CoM(ind_cond,7)+backLev_agonist,...
-                'g--','LineWidth',1)
+                'r--','LineWidth',1)
             
-            title_string = {[char(participant) ' hSRM - CoM']...
-                [sprintf('k_{a1}=%1.2g', dataAv.Gains_Ag_TotalDual_CoM(ind_cond,1)) ' ' sprintf('k_{v1}=%1.2g',dataAv.Gains_Ag_TotalDual_CoM(ind_cond,2))...
-                ' ' sprintf('k_{d1}=%1.2g',dataAv.Gains_Ag_TotalDual_CoM(ind_cond,3)) '      ' sprintf('k_{a2}=%1.2g',dataAv.Gains_Ag_TotalDual_CoM(ind_cond,5))...
-                ' ' sprintf('k_{v2}=%1.2g',dataAv.Gains_Ag_TotalDual_CoM(ind_cond,6)) ' ' sprintf('k_{d2}=%1.2g',dataAv.Gains_Ag_TotalDual_CoM(ind_cond,7))]...
-                [sprintf('R^{2} = %1.2g',dataAv.fit_agonist_TotalDual_CoM(ind_cond,1)) '      ' sprintf('VAF = %1.2g',dataAv.fit_agonist_TotalDual_CoM(ind_cond,2))]};
-            title(title_string)
-            legend('Data','hSRM (CoM)'); ylabel([tag_ag ' EMG']); xlabel('Time (s)');
+            title_string = {[participant + ' Mag' + num2str(mag) + " direc" + num2str(direc) + 'hSRM - CoM']...
+                [sprintf('R^{2} = %1.2g',dataAv.fit_antagonist(ind_cond,1)) '      ' sprintf('VAF = %1.2g',dataAv.fit_antagonist(ind_cond,2))]...
+                [sprintf('lambda_{1}=%1.2g',dataAv.Gains_Antag(ind_cond,4)) '      ' sprintf('lambda_{2}=%1.2g',dataAv.Gains_Antag(ind_cond,8))]};
+            title(title_string,'FontSize', 22)
+            legend('Data','hSRM - CoM',...
+                sprintf('k_{a1}=%1.2g', dataAv.Gains_Antag(ind_cond,1)), sprintf('k_{v1}=%1.2g',dataAv.Gains_Antag(ind_cond,2)),...
+                sprintf('k_{d1}=%1.2g',dataAv.Gains_Antag(ind_cond,3)), sprintf('k_{a2}=%1.2g',dataAv.Gains_Antag(ind_cond,5)),...
+                sprintf('k_{v2}=%1.2g',dataAv.Gains_Antag(ind_cond,6)), sprintf('k_{d2}=%1.2g',dataAv.Gains_Antag(ind_cond,7)),...
+                'FontSize', 22); 
+            ylabel([tag_ag ' EMG'], 'FontSize', 18); xlabel('Time (s)','FontSize', 18);
             xlim([-0.2 1.4]); ylim([-1 1])
             
             if savefigopt
@@ -197,9 +202,9 @@ for i = 1:length(participants) %participant loop
                 print(gcf,'-depsc2',[figdir + participant + '_hSRM_CoM_Comps_mag' + num2str(mag) + '_direc' + num2str(direc) + '_' + date +  '.eps'])
             end
             
-            %% plot Components for Antagonist SRM 
+            %% plot Components for Antagonist SRM
             backLev_antagonist = mean(antagonist(atime < -0.1),'omitnan');
-            figure; hold on
+            figure; hold on; set(gcf,'WindowState','maximized');
             plot(atime,antagonist,'Color', [0.5 0.5 0.5],'LineWidth',2)
             plot(atime(ind_time),dataAv.Recon_Antagonist(ind_cond,:),...
                 'k','LineWidth',2)
@@ -225,15 +230,18 @@ for i = 1:length(participants) %participant loop
                 d_antag(ind_time)*dataAv.Gains_Antag(ind_cond,7)+backLev_antagonist,...
                 'r--','LineWidth',1)
             
-            title_string = {[char(participant) ' AntagSRM']...
-                [sprintf('k_{a1}=%1.2g', dataAv.Gains_Antag(ind_cond,1)) ' ' sprintf('k_{v1}=%1.2g',dataAv.Gains_Antag(ind_cond,2))...
-                ' ' sprintf('k_{d1}=%1.2g',dataAv.Gains_Antag(ind_cond,3)) '      ' sprintf('k_{a2}=%1.2g',dataAv.Gains_Antag(ind_cond,5))...
-                ' ' sprintf('k_{v2}=%1.2g',dataAv.Gains_Antag(ind_cond,6)) ' ' sprintf('k_{d2}=%1.2g',dataAv.Gains_Antag(ind_cond,7))]...
-                [sprintf('R^{2} = %1.2g',dataAv.fit_antagonist(ind_cond,1)) '      ' sprintf('VAF = %1.2g',dataAv.fit_antagonist(ind_cond,2))]};
-            title(title_string)
-            legend('Data','AntagSRM'); ylabel([tag_antag ' EMG']); xlabel('Time (s)');
+            title_string = {[participant + ' Mag' + num2str(mag) + " direc" + num2str(direc) + 'AntagSRM']...
+                [sprintf('R^{2} = %1.2g',dataAv.fit_antagonist(ind_cond,1)) '      ' sprintf('VAF = %1.2g',dataAv.fit_antagonist(ind_cond,2))]...
+                [sprintf('lambda_{1}=%1.2g',dataAv.Gains_Antag(ind_cond,4)) '      ' sprintf('lambda_{2}=%1.2g',dataAv.Gains_Antag(ind_cond,8))]};
+            title(title_string,'FontSize', 22)
+            legend('Data','AntagSRM',...
+                sprintf('k_{a1}=%1.2g', dataAv.Gains_Antag(ind_cond,1)), sprintf('k_{v1}=%1.2g',dataAv.Gains_Antag(ind_cond,2)),...
+                sprintf('k_{d1}=%1.2g',dataAv.Gains_Antag(ind_cond,3)), sprintf('k_{a2}=%1.2g',dataAv.Gains_Antag(ind_cond,5)),...
+                sprintf('k_{v2}=%1.2g',dataAv.Gains_Antag(ind_cond,6)), sprintf('k_{d2}=%1.2g',dataAv.Gains_Antag(ind_cond,7)),...
+                'FontSize', 22); 
+            ylabel([tag_antag ' EMG'],'FontSize', 18); xlabel('Time (s)','FontSize', 18);
             xlim([-0.2 1.4]); ylim([-1 1])
-            
+           
             if savefigopt
                 saveas(gcf,[figdir + participant + '_AntagSRM_Comps_mag' + num2str(mag) + '_direc' + num2str(direc) + '_' + date + '.fig'],'fig')
                 saveas(gcf,[figdir + participant + '_AntagSRM_Comps_mag' + num2str(mag) + '_direc' + num2str(direc) + '_' + date +  '.jpg'],'jpg')
