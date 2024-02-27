@@ -21,14 +21,14 @@ saveopt = true; %Output
 cSRMs_opt = true;
 % Grouping Variables
 direcs = unique(dataAv.pertdir_calc_round_deg); % directions to be analyzed (90 and 270)
-% direcs = 270;
+% direcs = 90;
 mags = unique(dataAv.condition);
-% mags = mags(3);
+% mags = mags(1);
 % groups = unique(dataAv.group); %Group marker ("HOA" or "PD" -- string)
 participants = unique(dataAv.patient); %Unique subject code (i.e. "HOA02" -- string)
 % participants = ["HOA02"; "HOA04"; "HOA08"; "HOA13"; "HOA19";...
 %     "PD03"; "PD11"; "PD12"; "PD13"; "PD15"; "PD17"; "PD20"]; % fit specific participants only
-% participants = ["HOA09"; "PD02";];
+% participants = ["HOA15";];
 dataAv = dataAv(ismember(dataAv.patient, participants),:); % eliminate rows of dataAv if they are not part of "participants"
 analysisType = ''; % to modify save name with unique identifier
 

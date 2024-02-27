@@ -1,7 +1,7 @@
 %% Script to plot SRM Outputs
 close all; clear
 fdir = 'X:\ting\shared_ting\Scott\HOA_PD SRM\';
-load([fdir 'HOA_PD_SRM_Outputs__23-Feb-2024'])
+load([fdir 'HOA_PD_SRM_Outputs__26-Feb-2024'])
 % load([fdir 'HOA_PD_SRM_Outputs_HOA19_23-Oct-2023.mat']) % exemplar participants for R01 Renewal Figure
 % addpath('D:\Users\SBOEBIN\Documents\MATLAB\SRMUtilities')
 addpath('D:\Users\SBOEBIN\Documents\MATLAB\matlabUtilities-master')
@@ -14,8 +14,11 @@ figdir = 'X:\ting\shared_ting\Scott\HOA_PD SRM\savedfigs\';
 % comparison (1 per direction), SRM components, (1 per direction
 participants = unique(dataAv.patient);
 direcs = unique(dataAv.pertdir_calc_round_deg);
-mags = unique(dataAv.pert_mag);
-
+try
+    mags = unique(dataAv.pert_mag);
+catch
+    mags =  unique(dataAv.condition);
+end
 max_time = 1.2;
 min_time = -0.2;
 ind_time = find(dataAv.atime(1,:) > min_time & dataAv.atime(1,:) <= max_time); % adjust window that will be fit by the SRM
@@ -26,7 +29,11 @@ for i = 1:length(participants) %participant loop
         direc = direcs(ii);
         for iii = 1:length(mags)
             mag = mags(iii);
-            ind_cond = find(strcmp(dataAv.patient,participant) & dataAv.pertdir_calc_round_deg == direc & dataAv.pert_mag == mag);
+            try
+                ind_cond = find(strcmp(dataAv.patient,participant) & dataAv.pertdir_calc_round_deg == direc & dataAv.pert_mag == mag);
+            catch
+                ind_cond = find(strcmp(dataAv.patient,participant) & dataAv.pertdir_calc_round_deg == direc & dataAv.condition == mag);
+            end
             
             %specify which muscle is acting as an agonist/antagonist
             if direc == 90 %forward pert
@@ -50,7 +57,7 @@ for i = 1:length(participants) %participant loop
             d = d-mean(d(dataAv.atime(1,:)<-0.1));
             v = v-mean(v(dataAv.atime(1,:)<-0.1));
             
-            % flip the CoM kinematic signal depending on pert direction
+            % flip the CoM kinematic signal depending on pert direction            
             if direc == 90 %forward pert
                 a_ag = -a; v_ag = -v; d_ag = -d;
                 a_antag = a; v_antag = v; d_antag = d;
@@ -120,32 +127,32 @@ for i = 1:length(participants) %participant loop
             set(ax2,'YLim',yl)
             set(ax_all,'YLim',yl)
             
-%             if savefigopt
-%                 saveas(gcf,[figdir + participant + '_DualSRMCompare_mag' + num2str(mag) + '_direc' + num2str(direc) + '.fig'],'fig')
-%                 saveas(gcf,[figdir + participant + '_DualSRMCompare_mag' + num2str(mag) + '_direc' + num2str(direc) + '.jpg'],'jpg')
-%                 print(gcf,'-depsc2',[figdir + participant + '_DualSRMCompare_mag' + num2str(mag) + '_direc' + num2str(direc) + '.eps'])
-%             end
+            if savefigopt
+                saveas(gcf,[figdir + participant + '_DualSRMCompare_mag' + num2str(mag) + '_direc' + num2str(direc) + '_' + date + '.fig'],'fig')
+                saveas(gcf,[figdir + participant + '_DualSRMCompare_mag' + num2str(mag) + '_direc' + num2str(direc) + '_' + date + '.jpg'],'jpg')
+                print(gcf,'-depsc2',[figdir + participant + '_DualSRMCompare_mag' + num2str(mag) + '_direc' + num2str(direc) + '_' + date + '.eps'])
+            end
             
             
-%             %% plot Output variables
-%             figure(i + iii + direc + 10000); set(gcf,'WindowState','maximized');
-%             plotij(5,1,1,1)
-%             plot(atime,dataAv.COMAccel_Y(ind_cond,:)); ylabel('CoM - Acc (g)')
-%             plotij(5,1,2,1)
-%             plot(atime,dataAv.beta_ersp(ind_cond,:)); ylabel('beta (nu)')
-%             plotij(5,1,3,1)
-%             plot(atime,agonist); ylim(yl); ylabel('agonist (nu)')
-%             plotij(5,1,4,1)
-%             plot(atime,antagonist); ylim(yl); ylabel('antagonist (nu)')
-%             plotij(5,1,5,1)
-%             plot(atime,dataAv.COMPosminusLVDT_Y(ind_cond,:)); ylabel('CoM - Pos (cm)')
-%             xlabel('time (s)')
-%             sgtitle([participant + ' Mag' + num2str(mag) + " direc" + num2str(direc)])
-%             if savefigopt
-%                 saveas(gcf,[figdir + participant + '_OutputMeasures_mag' + num2str(mag) + '_direc' + num2str(direc) + '.fig'],'fig')
-%                 saveas(gcf,[figdir + participant + '_OutputMeasures_mag' + num2str(mag) + '_direc' + num2str(direc) + '.jpg'],'jpg')
-%                 print(gcf,'-depsc2',[figdir + participant + '_OutputMeasures_mag' + num2str(mag) + '_direc' + num2str(direc) + '.eps'])
-%             end
+            %             %% plot Output variables
+            %             figure(i + iii + direc + 10000); set(gcf,'WindowState','maximized');
+            %             plotij(5,1,1,1)
+            %             plot(atime,dataAv.COMAccel_Y(ind_cond,:)); ylabel('CoM - Acc (g)')
+            %             plotij(5,1,2,1)
+            %             plot(atime,dataAv.beta_ersp(ind_cond,:)); ylabel('beta (nu)')
+            %             plotij(5,1,3,1)
+            %             plot(atime,agonist); ylim(yl); ylabel('agonist (nu)')
+            %             plotij(5,1,4,1)
+            %             plot(atime,antagonist); ylim(yl); ylabel('antagonist (nu)')
+            %             plotij(5,1,5,1)
+            %             plot(atime,dataAv.COMPosminusLVDT_Y(ind_cond,:)); ylabel('CoM - Pos (cm)')
+            %             xlabel('time (s)')
+            %             sgtitle([participant + ' Mag' + num2str(mag) + " direc" + num2str(direc)])
+            %             if savefigopt
+            %                 saveas(gcf,[figdir + participant + '_OutputMeasures_mag' + num2str(mag) + '_direc' + num2str(direc) + '.fig'],'fig')
+            %                 saveas(gcf,[figdir + participant + '_OutputMeasures_mag' + num2str(mag) + '_direc' + num2str(direc) + '.jpg'],'jpg')
+            %                 print(gcf,'-depsc2',[figdir + participant + '_OutputMeasures_mag' + num2str(mag) + '_direc' + num2str(direc) + '.eps'])
+            %             end
             
             %% plot Components for hSRM-CoM
             backLev_agonist = mean(agonist(atime < -0.1),'omitnan');
@@ -185,9 +192,52 @@ for i = 1:length(participants) %participant loop
             xlim([-0.2 1.4]); ylim([-1 1])
             
             if savefigopt
-                saveas(gcf,[figdir + participant + '_hSRM_CoM_Comps_mag' + num2str(mag) + '_direc' + num2str(direc) + '.fig'],'fig')
-                saveas(gcf,[figdir + participant + '_hSRM_CoM_Comps_mag' + num2str(mag) + '_direc' + num2str(direc) + '.jpg'],'jpg')
-                print(gcf,'-depsc2',[figdir + participant + '_hSRM_CoM_Comps_mag' + num2str(mag) + '_direc' + num2str(direc) + '.eps'])
+                saveas(gcf,[figdir + participant + '_hSRM_CoM_Comps_mag' + num2str(mag) + '_direc' + num2str(direc) + '_' + date + '.fig'],'fig')
+                saveas(gcf,[figdir + participant + '_hSRM_CoM_Comps_mag' + num2str(mag) + '_direc' + num2str(direc) + '_' + date +  '.jpg'],'jpg')
+                print(gcf,'-depsc2',[figdir + participant + '_hSRM_CoM_Comps_mag' + num2str(mag) + '_direc' + num2str(direc) + '_' + date +  '.eps'])
+            end
+            
+            %% plot Components for Antagonist SRM 
+            backLev_antagonist = mean(antagonist(atime < -0.1),'omitnan');
+            figure; hold on
+            plot(atime,antagonist,'b','LineWidth',2)
+            plot(atime(ind_time),dataAv.Recon_Antagonist(ind_cond,:),...
+                'm','LineWidth',2)
+            %plot stabalizing components
+            plot(atime(ind_time)+dataAv.Gains_Antag(ind_cond,4),...
+                a_antag(ind_time)*dataAv.Gains_Antag(ind_cond,1)+backLev_antagonist,...
+                'g-','LineWidth',1)
+            plot(atime(ind_time)+dataAv.Gains_Antag(ind_cond,4),...
+                v_antag(ind_time)*dataAv.Gains_Antag(ind_cond,2)+backLev_antagonist,...
+                'g.-','LineWidth',1)
+            plot(atime(ind_time)+dataAv.Gains_Antag(ind_cond,4),...
+                d_antag(ind_time)*dataAv.Gains_Antag(ind_cond,3)+backLev_antagonist,...
+                'g--','LineWidth',1)
+            
+            %plot Destabalizing components
+            plot(atime(ind_time)+dataAv.Gains_Antag(ind_cond,8),...
+                -a_antag(ind_time)*dataAv.Gains_Antag(ind_cond,5)+backLev_antagonist,...
+                'r-','LineWidth',1)
+            plot(atime(ind_time)+dataAv.Gains_Antag(ind_cond,8),...
+                v_antag(ind_time)*dataAv.Gains_Antag(ind_cond,6)+backLev_antagonist,...
+                'r.-','LineWidth',1)
+            plot(atime(ind_time)+dataAv.Gains_Antag(ind_cond,8),...
+                d_antag(ind_time)*dataAv.Gains_Antag(ind_cond,7)+backLev_antagonist,...
+                'r--','LineWidth',1)
+            
+            title_string = {[char(participant) ' AntagSRM']...
+                [sprintf('k_{a1}=%1.2g', dataAv.Gains_Antag(ind_cond,1)) ' ' sprintf('k_{v1}=%1.2g',dataAv.Gains_Antag(ind_cond,2))...
+                ' ' sprintf('k_{d1}=%1.2g',dataAv.Gains_Antag(ind_cond,3)) '      ' sprintf('k_{a2}=%1.2g',dataAv.Gains_Antag(ind_cond,5))...
+                ' ' sprintf('k_{v2}=%1.2g',dataAv.Gains_Antag(ind_cond,6)) ' ' sprintf('k_{d2}=%1.2g',dataAv.Gains_Antag(ind_cond,7))]...
+                [sprintf('R^{2} = %1.2g',dataAv.fit_antagonist(ind_cond,1)) '      ' sprintf('VAF = %1.2g',dataAv.fit_antagonist(ind_cond,2))]};
+            title(title_string)
+            legend('Data','AntagSRM'); ylabel([tag_antag ' EMG']); xlabel('Time (s)');
+            xlim([-0.2 1.4]); ylim([-1 1])
+            
+            if savefigopt
+                saveas(gcf,[figdir + participant + '_AntagSRM_Comps_mag' + num2str(mag) + '_direc' + num2str(direc) + '_' + date + '.fig'],'fig')
+                saveas(gcf,[figdir + participant + '_AntagSRM_Comps_mag' + num2str(mag) + '_direc' + num2str(direc) + '_' + date +  '.jpg'],'jpg')
+                print(gcf,'-depsc2',[figdir + participant + '_AntagSRM_Comps_mag' + num2str(mag) + '_direc' + num2str(direc) + '_' + date +  '.eps'])
             end
             
         end %mag loop
