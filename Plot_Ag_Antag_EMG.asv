@@ -77,7 +77,7 @@ for i = 1:length(participants) %participant loop
             saveas(fig_all,[figdir + participant + '_AgAntagEMG_allmags_direc' + num2str(direc) + '_' + date + '.jpg'],'jpg')
             print(fig_all,'-depsc2',[figdir + participant + '_AgAntagEMG_mag' + num2str(mag) + '_direc' + num2str(direc) + '_' + date + '.eps'])
         end
-        clf(fig_all)
+        clf
     end % direction loop
     close all
 end % participant loop
