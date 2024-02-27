@@ -1,7 +1,7 @@
 %% Script to plot SRM Outputs
 close all; clear
 fdir = 'X:\ting\shared_ting\Scott\HOA_PD SRM\';
-load([fdir 'HOA_PD_SRM_Outputs__23-Feb-2024'])
+load([fdir 'HOA_PD_SRM_Outputs__26-Feb-2024'])
 % load([fdir 'HOA_PD_SRM_Outputs_HOA19_23-Oct-2023.mat']) % exemplar participants for R01 Renewal Figure
 % addpath('D:\Users\SBOEBIN\Documents\MATLAB\SRMUtilities')
 addpath('D:\Users\SBOEBIN\Documents\MATLAB\matlabUtilities-master')
@@ -34,6 +34,7 @@ for i = 1:length(participants) %participant loop
             catch
                 ind_cond = find(strcmp(dataAv.patient,participant) & dataAv.pertdir_calc_round_deg == direc & dataAv.condition == mag);
             end
+            
             %specify which muscle is acting as an agonist/antagonist
             if direc == 90 %forward pert
                 agonist = dataAv.EMG_TA_L_norm(ind_cond,:); tag_ag='TA'; ag_norm = dataAv.EMG_TA_L_norm(ind_cond,:);
@@ -56,7 +57,7 @@ for i = 1:length(participants) %participant loop
             d = d-mean(d(dataAv.atime(1,:)<-0.1));
             v = v-mean(v(dataAv.atime(1,:)<-0.1));
             
-            % flip the CoM kinematic signal depending on pert direction
+            % flip the CoM kinematic signal depending on pert direction            
             if direc == 90 %forward pert
                 a_ag = -a; v_ag = -v; d_ag = -d;
                 a_antag = a; v_antag = v; d_antag = d;
@@ -69,7 +70,7 @@ for i = 1:length(participants) %participant loop
             figure(i*100 + iii*1000 + direc + 10000); set(gcf,'WindowState','maximized');
             %mSRM
             ax1 = plotij(4,2,1,1); hold on
-            plot(atime,agonist,'k','LineWidth',2)
+            plot(atime,agonist,'Color', [0.5 0.5 0.5],'LineWidth',2)
             plot(atime(ind_time),dataAv.Recon_Agonist(ind_cond,:),'r','LineWidth',2)
             title_string = {['mSRM']...
                 [sprintf('k_{a}=%1.2g', dataAv.Gains_Ag(ind_cond,1)) ' ' sprintf('k_{v}=%1.2g',dataAv.Gains_Ag(ind_cond,2)) ' ' sprintf('k_{d}=%1.2g',dataAv.Gains_Ag(ind_cond,3))]...
@@ -79,8 +80,8 @@ for i = 1:length(participants) %participant loop
             
             %hSRM - CoM
             ax2 = plotij(4,2,2,1); hold on
-            plot(atime,agonist,'k','LineWidth',2)
-            plot(atime(ind_time),dataAv.Recon_Agonist_TotalDual_CoM(ind_cond,:),'m','LineWidth',2)
+            plot(atime,agonist,'Color', [0.5 0.5 0.5],'LineWidth',2)
+            plot(atime(ind_time),dataAv.Recon_Agonist_TotalDual_CoM(ind_cond,:),'k','LineWidth',2)
             title_string = {['hSRM - CoM']...
                 [sprintf('k_{a1}=%1.2g', dataAv.Gains_Ag_TotalDual_CoM(ind_cond,1)) ' ' sprintf('k_{v1}=%1.2g',dataAv.Gains_Ag_TotalDual_CoM(ind_cond,2))...
                 ' ' sprintf('k_{d1}=%1.2g',dataAv.Gains_Ag_TotalDual_CoM(ind_cond,3)) '      ' sprintf('k_{a2}=%1.2g',dataAv.Gains_Ag_TotalDual_CoM(ind_cond,5))...
@@ -91,7 +92,7 @@ for i = 1:length(participants) %participant loop
             
             % hSRM - Cz
             ax3 = plotij(4,2,3,1); hold on
-            plot(atime,agonist,'k','LineWidth',2)
+            plot(atime,agonist,'Color', [0.5 0.5 0.5],'LineWidth',2)
             plot(atime(ind_time),dataAv.Recon_Agonist_TotalDual_Cz(ind_cond,:),'b','LineWidth',2)
             title_string = {['hSRM - Cz']...
                 [sprintf('k_{a1}=%1.2g', dataAv.Gains_Ag_TotalDual_Cz(ind_cond,1)) ' ' sprintf('k_{v1}=%1.2g',dataAv.Gains_Ag_TotalDual_Cz(ind_cond,2))...
@@ -102,7 +103,7 @@ for i = 1:length(participants) %participant loop
             
             % hSRM - beta
             ax4 = plotij(4,2,4,1); hold on
-            plot(atime,agonist,'k','LineWidth',2)
+            plot(atime,agonist,'Color', [0.5 0.5 0.5],'LineWidth',2)
             plot(atime(ind_time),dataAv.Recon_Agonist_TotalDual_beta(ind_cond,:),'g','LineWidth',2)
             title_string = {['hSRM - Cz']...
                 [sprintf('k_{a1}=%1.2g', dataAv.Gains_Ag_TotalDual_beta(ind_cond,1)) ' ' sprintf('k_{v1}=%1.2g',dataAv.Gains_Ag_TotalDual_beta(ind_cond,2))...
@@ -113,9 +114,9 @@ for i = 1:length(participants) %participant loop
             
             % all on same plot
             ax_all = plotij(1,2,1,2); hold on
-            plot(atime,agonist,'k','LineWidth',2)
+            plot(atime,agonist,'Color', [0.5 0.5 0.5],'LineWidth',2)
             plot(atime(ind_time),dataAv.Recon_Agonist(ind_cond,:),'r','LineWidth',2)
-            plot(atime(ind_time),dataAv.Recon_Agonist_TotalDual_CoM(ind_cond,:),'m','LineWidth',2)
+            plot(atime(ind_time),dataAv.Recon_Agonist_TotalDual_CoM(ind_cond,:),'k','LineWidth',2)
             plot(atime(ind_time),dataAv.Recon_Agonist_TotalDual_Cz(ind_cond,:),'b','LineWidth',2)
             plot(atime(ind_time),dataAv.Recon_Agonist_TotalDual_beta(ind_cond,:),'g','LineWidth',2)
             title('All SRMs'); ylabel([tag_ag ' EMG']); xlabel('Time (s)');
@@ -156,9 +157,9 @@ for i = 1:length(participants) %participant loop
             %% plot Components for hSRM-CoM
             backLev_agonist = mean(agonist(atime < -0.1),'omitnan');
             figure; hold on
-            plot(atime,agonist,'b','LineWidth',2)
+            plot(atime,agonist,'Color', [0.5 0.5 0.5],'LineWidth',2)
             plot(atime(ind_time),dataAv.Recon_Agonist_TotalDual_CoM(ind_cond,:),...
-                'm','LineWidth',2)
+                'k','LineWidth',2)
             %plot subctx components
             plot(atime(ind_time)+dataAv.Gains_Ag_TotalDual_CoM(ind_cond,4),...
                 a_ag(ind_time)*dataAv.Gains_Ag_TotalDual_CoM(ind_cond,1)+backLev_agonist,...
@@ -194,6 +195,49 @@ for i = 1:length(participants) %participant loop
                 saveas(gcf,[figdir + participant + '_hSRM_CoM_Comps_mag' + num2str(mag) + '_direc' + num2str(direc) + '_' + date + '.fig'],'fig')
                 saveas(gcf,[figdir + participant + '_hSRM_CoM_Comps_mag' + num2str(mag) + '_direc' + num2str(direc) + '_' + date +  '.jpg'],'jpg')
                 print(gcf,'-depsc2',[figdir + participant + '_hSRM_CoM_Comps_mag' + num2str(mag) + '_direc' + num2str(direc) + '_' + date +  '.eps'])
+            end
+            
+            %% plot Components for Antagonist SRM 
+            backLev_antagonist = mean(antagonist(atime < -0.1),'omitnan');
+            figure; hold on
+            plot(atime,antagonist,'Color', [0.5 0.5 0.5],'LineWidth',2)
+            plot(atime(ind_time),dataAv.Recon_Antagonist(ind_cond,:),...
+                'k','LineWidth',2)
+            %plot stabalizing components
+            plot(atime(ind_time)+dataAv.Gains_Antag(ind_cond,4),...
+                a_antag(ind_time)*dataAv.Gains_Antag(ind_cond,1)+backLev_antagonist,...
+                'g-','LineWidth',1)
+            plot(atime(ind_time)+dataAv.Gains_Antag(ind_cond,4),...
+                v_antag(ind_time)*dataAv.Gains_Antag(ind_cond,2)+backLev_antagonist,...
+                'g.-','LineWidth',1)
+            plot(atime(ind_time)+dataAv.Gains_Antag(ind_cond,4),...
+                d_antag(ind_time)*dataAv.Gains_Antag(ind_cond,3)+backLev_antagonist,...
+                'g--','LineWidth',1)
+            
+            %plot Destabalizing components
+            plot(atime(ind_time)+dataAv.Gains_Antag(ind_cond,8),...
+                -a_antag(ind_time)*dataAv.Gains_Antag(ind_cond,5)+backLev_antagonist,...
+                'r-','LineWidth',1)
+            plot(atime(ind_time)+dataAv.Gains_Antag(ind_cond,8),...
+                v_antag(ind_time)*dataAv.Gains_Antag(ind_cond,6)+backLev_antagonist,...
+                'r.-','LineWidth',1)
+            plot(atime(ind_time)+dataAv.Gains_Antag(ind_cond,8),...
+                d_antag(ind_time)*dataAv.Gains_Antag(ind_cond,7)+backLev_antagonist,...
+                'r--','LineWidth',1)
+            
+            title_string = {[char(participant) ' AntagSRM']...
+                [sprintf('k_{a1}=%1.2g', dataAv.Gains_Antag(ind_cond,1)) ' ' sprintf('k_{v1}=%1.2g',dataAv.Gains_Antag(ind_cond,2))...
+                ' ' sprintf('k_{d1}=%1.2g',dataAv.Gains_Antag(ind_cond,3)) '      ' sprintf('k_{a2}=%1.2g',dataAv.Gains_Antag(ind_cond,5))...
+                ' ' sprintf('k_{v2}=%1.2g',dataAv.Gains_Antag(ind_cond,6)) ' ' sprintf('k_{d2}=%1.2g',dataAv.Gains_Antag(ind_cond,7))]...
+                [sprintf('R^{2} = %1.2g',dataAv.fit_antagonist(ind_cond,1)) '      ' sprintf('VAF = %1.2g',dataAv.fit_antagonist(ind_cond,2))]};
+            title(title_string)
+            legend('Data','AntagSRM'); ylabel([tag_antag ' EMG']); xlabel('Time (s)');
+            xlim([-0.2 1.4]); ylim([-1 1])
+            
+            if savefigopt
+                saveas(gcf,[figdir + participant + '_AntagSRM_Comps_mag' + num2str(mag) + '_direc' + num2str(direc) + '_' + date + '.fig'],'fig')
+                saveas(gcf,[figdir + participant + '_AntagSRM_Comps_mag' + num2str(mag) + '_direc' + num2str(direc) + '_' + date +  '.jpg'],'jpg')
+                print(gcf,'-depsc2',[figdir + participant + '_AntagSRM_Comps_mag' + num2str(mag) + '_direc' + num2str(direc) + '_' + date +  '.eps'])
             end
             
         end %mag loop

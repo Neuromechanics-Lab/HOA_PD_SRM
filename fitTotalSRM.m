@@ -45,39 +45,8 @@ if ~isempty(src)
     LB = 0.9*X0;
 end
 
-% if (strcmp(subjID,"PD15") & magnitude == 10 & direction == 270)
-%     % ka Destabilizing
-%     UB(5) = 0; LB(5) = 0; X0(5) = 0;
-%     % kv destabilizing
-%     UB(6) = 0; LB(6) = 0; X0(6) = 0;
-%     % kd destabilizing
-%     UB(7) = 0; LB(7) = 0; X0(7) = 0;
-%     % ka Braking
-%     UB(1) = 1.9;
-% elseif (strcmp(subjID,"HOA09") & magnitude == 10 & direction == 270)
-%     % ka Destabilizing
-%     UB(5) = 1.5; LB(5) = 0; X0(5) = 0.5;
-%     % kv destabilizing
-%     UB(6) = 1; LB(6) = 0.017; X0(6) = 0.02;
-%     % kd destabilizing
-%     UB(7) = 1; LB(7) = 0.03; %X0(7) = 0.036;
-% end
-
 [X,FVAL,EXITFLAG] = fmincon(@(X) jigsawTwoChannelPassthrough(X,predictors,gainFlag,atime,e,optimizationParameters),X0,[],[],[],[],LB,UB,[],options);
 
-% if (strcmp(subjID,"HOA09") & magnitude == 10 & direction == 270)
-%     % ka Braking
-%     X(1) = 0;
-%     %kv Braking
-%     X(2) = 0;
-%     % lambda destabilizing
-%     X(end) = 0.180;
-% elseif (strcmp(subjID,"PD02") & magnitude == 10 & direction == 270)
-%     % kd Destabilizing
-%     X(7) = 0.005;
-%     % lambda braking
-% %     X(4) = 0.12;
-% end
 xTotal = X;
 eTotal = assembleTwoChannels(predictors(1:3,:),X(1:3),X(4),predictors(4:6,:),X(5:7),X(8),atime);
 
