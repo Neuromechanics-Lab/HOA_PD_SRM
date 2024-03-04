@@ -1,12 +1,13 @@
 %% Script to plot SRM Outputs
 close all; clear
 fdir = 'X:\ting\shared_ting\Scott\HOA_PD SRM\';
-load([fdir 'HOA_PD_SRM_Outputs__26-Feb-2024'])
+load([fdir 'HOA_PD_SRM_Outputs_Threshold_27-Feb-2024.mat'])
 % load([fdir 'HOA_PD_SRM_Outputs_HOA19_23-Oct-2023.mat']) % exemplar participants for R01 Renewal Figure
 % addpath('D:\Users\SBOEBIN\Documents\MATLAB\SRMUtilities')
 addpath('D:\Users\SBOEBIN\Documents\MATLAB\matlabUtilities-master')
 
 savefigopt = true;
+AnalysisType = 'Threshold_'; % additional descriptor to be added to file name 
 closeopt = true; %option to close all figures after the participant loop
 figdir = 'X:\ting\shared_ting\Scott\HOA_PD SRM\savedfigs\';
 %% plot data
@@ -130,9 +131,9 @@ for i = 1:length(participants) %participant loop
             set(ax_all,'YLim',yl)
             
             if savefigopt
-                saveas(gcf,[figdir + participant + '_DualSRMCompare_mag' + num2str(mag) + '_direc' + num2str(direc) + '_' + date + '.fig'],'fig')
-                saveas(gcf,[figdir + participant + '_DualSRMCompare_mag' + num2str(mag) + '_direc' + num2str(direc) + '_' + date + '.jpg'],'jpg')
-                print(gcf,'-depsc2',[figdir + participant + '_DualSRMCompare_mag' + num2str(mag) + '_direc' + num2str(direc) + '_' + date + '.eps'])
+                saveas(gcf,[figdir + participant + '_DualSRMCompare_mag' + num2str(mag) + '_direc' + num2str(direc) + '_' + AnalysisType + date + '.fig'],'fig')
+                saveas(gcf,[figdir + participant + '_DualSRMCompare_mag' + num2str(mag) + '_direc' + num2str(direc) + '_' + AnalysisType + date + '.jpg'],'jpg')
+                print(gcf,'-depsc2',[figdir + participant + '_DualSRMCompare_mag' + num2str(mag) + '_direc' + num2str(direc) + '_' + AnalysisType + date + '.eps'])
             end
             
             
@@ -197,9 +198,9 @@ for i = 1:length(participants) %participant loop
             xlim([-0.2 1.4]); ylim([-1 1])
             
             if savefigopt
-                saveas(gcf,[figdir + participant + '_hSRM_CoM_Comps_mag' + num2str(mag) + '_direc' + num2str(direc) + '_' + date + '.fig'],'fig')
-                saveas(gcf,[figdir + participant + '_hSRM_CoM_Comps_mag' + num2str(mag) + '_direc' + num2str(direc) + '_' + date +  '.jpg'],'jpg')
-                print(gcf,'-depsc2',[figdir + participant + '_hSRM_CoM_Comps_mag' + num2str(mag) + '_direc' + num2str(direc) + '_' + date +  '.eps'])
+                saveas(gcf,[figdir + participant + '_hSRM_CoM_Comps_mag' + num2str(mag) + '_direc' + num2str(direc) + '_' + AnalysisType + date + '.fig'],'fig')
+                saveas(gcf,[figdir + participant + '_hSRM_CoM_Comps_mag' + num2str(mag) + '_direc' + num2str(direc) + '_' + AnalysisType + date +  '.jpg'],'jpg')
+                print(gcf,'-depsc2',[figdir + participant + '_hSRM_CoM_Comps_mag' + num2str(mag) + '_direc' + num2str(direc) + '_' + AnalysisType + date +  '.eps'])
             end
             
             %% plot Components for Antagonist SRM
@@ -243,9 +244,9 @@ for i = 1:length(participants) %participant loop
             xlim([-0.2 1.4]); ylim([-1 1])
            
             if savefigopt
-                saveas(gcf,[figdir + participant + '_AntagSRM_Comps_mag' + num2str(mag) + '_direc' + num2str(direc) + '_' + date + '.fig'],'fig')
-                saveas(gcf,[figdir + participant + '_AntagSRM_Comps_mag' + num2str(mag) + '_direc' + num2str(direc) + '_' + date +  '.jpg'],'jpg')
-                print(gcf,'-depsc2',[figdir + participant + '_AntagSRM_Comps_mag' + num2str(mag) + '_direc' + num2str(direc) + '_' + date +  '.eps'])
+                saveas(gcf,[figdir + participant + '_AntagSRM_Comps_mag' + num2str(mag) + '_direc' + num2str(direc) + '_' + AnalysisType + date + '.fig'],'fig')
+                saveas(gcf,[figdir + participant + '_AntagSRM_Comps_mag' + num2str(mag) + '_direc' + num2str(direc) + '_' + AnalysisType + date +  '.jpg'],'jpg')
+                print(gcf,'-depsc2',[figdir + participant + '_AntagSRM_Comps_mag' + num2str(mag) + '_direc' + num2str(direc) + '_' + AnalysisType + date +  '.eps'])
             end
             
         end %mag loop
