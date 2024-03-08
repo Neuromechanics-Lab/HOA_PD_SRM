@@ -36,16 +36,13 @@ for i = 1:size(src,1)
     end
 end
 src(ind_rmv,:) = [];
-% 02.27.24 commented out since I changed to threshold predictors before
-% summing, and outputs from HandFit were modified when the predictors were
-% not thresholded before summing
-% if ~isempty(src) 
-%     load(src.folder + "\" + src.name)
-%     X0 = output.New_Gains; 
-%     % set bounds to be +/- 10% of hand fit value 
-%     UB = 1.1*X0;
-%     LB = 0.9*X0;
-% end
+if ~isempty(src) 
+    load(src.folder + "\" + src.name)
+    X0 = output.New_Gains; 
+    % set bounds to be +/- 10% of hand fit value 
+    UB = 1.1*X0;
+    LB = 0.9*X0;
+end
 
 [X,FVAL,EXITFLAG] = fmincon(@(X) jigsawTwoChannelPassthrough(X,predictors,gainFlag,atime,e,optimizationParameters),X0,[],[],[],[],LB,UB,[],options);
 

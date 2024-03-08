@@ -30,7 +30,7 @@ participants = unique(dataAv.patient); %Unique subject code (i.e. "HOA02" -- str
 %     "PD03"; "PD11"; "PD12"; "PD13"; "PD15"; "PD17"; "PD20"]; % fit specific participants only
 % participants = "PD05";
 dataAv = dataAv(ismember(dataAv.patient, participants),:); % eliminate rows of dataAv if they are not part of "participants"
-analysisType = 'Threshold'; % to modify save name with unique identifier
+analysisType = ''; % to modify save name with unique identifier
 
 %% Add SRM Outputs to the data table
 %Find common time span for all variables (MoCap, EEG, EMG)
