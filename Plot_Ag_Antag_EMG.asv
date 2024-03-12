@@ -51,7 +51,6 @@ for i = 1:length(participants) %participant loop
             xlabel('Time (s)','FontSize', 24); ylabel('EMG (nu)','FontSize', 24)
             ylim(yl)
             title([participant + ' Mag: ' + num2str(mag) + " direc: " + num2str(direc)],'FontSize', 36)
-            set(gca,'FontSize',24)
             % Save Figure
             if savefigopt
                 saveas(gcf,[figdir + participant + '_AgAntagEMG_mag' + num2str(mag) + '_direc' + num2str(direc) + '_' + date + '.fig'],'fig')
@@ -65,7 +64,6 @@ for i = 1:length(participants) %participant loop
 
         end %mag loop
         %% set All magnitude figure options and save
-        set(ax_all,'FontSize',24)
         title(ax_all, [participant + " All Mags  direc: " + num2str(direc)],'FontSize', 36)
         legend(ax_all, "Ag_{low} (" + tag_ag + ")","Antag_{low} (" + tag_antag +")",...
             "Ag_{med}(" + tag_ag + ")","Antag_{med} (" + tag_antag +")",...
