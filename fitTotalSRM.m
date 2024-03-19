@@ -39,9 +39,12 @@ src(ind_rmv,:) = [];
 if ~isempty(src) 
     load(src.folder + "\" + src.name)
     X0 = output.New_Gains; 
-    % set bounds to be +/- 10% of hand fit value 
-    UB = 1.1*X0;
-    LB = 0.9*X0;
+    % set bounds to be +/- 10% of hand fit value for feedback gains
+    UB(gainFlag) = 1.1*X0(gainFlag);
+    LB(gainFlag) = 0.9*X0(gainFlag);
+    % set bounds to be +/- 10ms of hand fit value for onset latency
+    LB(~gainFlag) = X0(~gainFlag) - 0.010;
+    UB(~gainFlag) = X0(~gainFlag) + 0.010;
 end
 
 [X,FVAL,EXITFLAG] = fmincon(@(X) jigsawTwoChannelPassthrough(X,predictors,gainFlag,atime,e,optimizationParameters),X0,[],[],[],[],LB,UB,[],options);
