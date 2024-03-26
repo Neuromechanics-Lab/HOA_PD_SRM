@@ -68,7 +68,7 @@ for i = 1:length(participants) %participant loop
                 a_antag = -a; v_antag = -v; d_antag = -d;
             end
             %% plot mSRM hSRM comparisons
-            yl = [0 1];
+            yl = [0 1]; xl = [-0.2 1.4];
             figure(i*100 + iii*1000 + direc + 10000); set(gcf,'WindowState','maximized');
             %mSRM
             % ax1 = plotij(4,2,1,1); hold on % w/ cortical SRMS
@@ -127,9 +127,9 @@ for i = 1:length(participants) %participant loop
             %             legend('Data','mSRM','dSRM (beta)','dSRM (Cz)','dSRM (CoM')
             legend('Data','mSRM','hSRM (CoM')
             sgtitle([participant + ' Mag' + num2str(mag) + " direc" + num2str(direc)])
-            set(ax1,'YLim',yl)
-            set(ax2,'YLim',yl)
-            set(ax_all,'YLim',yl)
+            set(ax1,'YLim',yl); set(ax1,'XLim',xl)
+            set(ax2,'YLim',yl); set(ax2,'XLim',xl)
+            set(ax_all,'YLim',yl); set(ax_all,'XLim',xl)
             
             if p.Results.savefigopt
                 saveas(gcf,[p.Results.figdir + participant + '_DualSRMCompare_mag' + num2str(mag) + '_direc' + num2str(direc) + '_' + p.Results.AnalysisType + date + '.fig'],'fig')
