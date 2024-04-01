@@ -1,3 +1,4 @@
+%% Script to compare reconstruction accuracies between SRM reconstructions
 clear; close all; 
 
 Thresholded = load('X:\ting\shared_ting\Scott\HOA_PD SRM\HOA_PD_SRM_Outputs_Threshold_27-Feb-2024.mat');
