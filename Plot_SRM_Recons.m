@@ -1,5 +1,5 @@
-%% Script to plot SRM Outputs
-function Plot_SRM_Output(dataAv, varargin)
+%% Script to plot SRM Recons
+function Plot_SRM_Recons(dataAv, varargin)
 p = inputParser;
 addOptional(p,'savefigopt',true); % option to save figures
 addOptional(p,'closeopt',true); %option to close all figures after the participant loop
