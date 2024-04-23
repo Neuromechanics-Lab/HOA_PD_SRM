@@ -31,10 +31,15 @@ for i = 1:length(participants) %participant loop
         direc = direcs(ii);
         for iii = 1:length(mags)
             mag = mags(iii);
+
             try
                 ind_cond = find(strcmp(dataAv.patient,participant) & dataAv.pertdir_calc_round_deg == direc & dataAv.pert_mag == mag);
             catch
                 ind_cond = find(strcmp(dataAv.patient,participant) & dataAv.pertdir_calc_round_deg == direc & dataAv.condition == mag);
+            end
+            if isempty(ind_cond)
+               warning("No trial found for " + participant + " direc" + num2str(direc) + " mag" + num2str(mag))
+                break
             end
             
             %specify which muscle is acting as an agonist/antagonist

@@ -6,7 +6,9 @@ load('D:\Users\SBOEBIN\Documents\MATLAB\Post creatfitsData Output\HOA_PD_DataTab
 
 %% remove magnitudes that are not shared between participants
 dataAv = dataAv(dataAv.condition ~= 12, :);
+
 % Find common participant identifiers and filter data tables
+
 commonParticipants = intersect(dataAv.patient, T.ID);
 dataAv = dataAv(ismember(dataAv.patient, commonParticipants), :);
 dataSD = dataSD(ismember(dataSD.patient, commonParticipants), :);

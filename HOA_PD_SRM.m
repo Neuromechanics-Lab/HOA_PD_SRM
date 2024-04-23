@@ -8,17 +8,23 @@ addpath('D:\Users\SBOEBIN\Documents\MATLAB\matlabUtilities-master')
 % addpath('C:\Users\seboe\OneDrive - Emory University\Documents\Grad School\Neuromechanics Lab\SRM\SRM-Practice\SRMUtilities')
 addpath('C:\Users\seboe\OneDrive - Emory University\Documents\Grad School\Neuromechanics Lab\SRM\matlabUtilities-master')
 
-load('D:\Users\SBOEBIN\Documents\MATLAB\Post creatfitsData Output\HOA_PD_DataTables_interp_norm_06-Dec-2023.mat') %output measures Table (EEG, EMG, etc.)
-
+% load('D:\Users\SBOEBIN\Documents\MATLAB\Post creatfitsData Output\HOA_PD_DataTables_interp_norm_06-Dec-2023.mat') %output measures Table (EEG, EMG, etc.)
+load('D:\Users\SBOEBIN\Documents\MATLAB\Post creatfitsData Output\HOA_PD_DataTables_04-Oct-2023.mat') % output measures, no EEG
 % dataAv.Cz = double(dataAv.Cz); %convert Cz(t) to class double for SRM recon
 savedir = '\\cosmic.bme.emory.edu\labs\ting\shared_ting\Scott\HOA_PD SRM\';
+
+%% remove participant/magnitude/direction pairs that will not be reconstructed 
+dataAv(strcmp(dataAv.patient,"PD07"),:) = []; % PD07 excluded due to brain tumor
+dataAv(strcmp(dataAv.patient,"PD17"),:) = []; % PD17 excluded due to peripheral neuropothy
+
+% dataAv(dataAv.condition == 12,:) = []; % HOA 19 and 20 had a larger perturbation magnitude included for piloting purposes.  
 
 %% User inputs
 removeBackLev = 1;
 % Saving options (if true then will save output)
 saveopt = true; %Output
 % SRM reconstruction options
-cSRMs_opt = true;
+cSRMs_opt = false;
 % Grouping Variables
 direcs = unique(dataAv.pertdir_calc_round_deg); % directions to be analyzed (90 and 270)
 % direcs = 270;
@@ -41,45 +47,22 @@ ind_time = find(dataAv.atime(1,:) > min_time & dataAv.atime(1,:) <= max_time); %
 
 TableHeight = size(dataAv,1);
 ReconLength = length(dataAv.atime(1,ind_time)); %length of SRM Recon
-% Recon Time 
+% Recon Time
 Recon_time = nan([TableHeight,ReconLength]);
 % Feedback Gains
 Gains_Ag = nan([TableHeight,4]);
 Gains_Antag = nan([TableHeight,8]);
-Gains_Beta = nan([TableHeight,4]);
-Gains_Cz = nan([TableHeight,4]);
+
 % SRM Reconstructions
-Recon_Beta = nan([TableHeight,ReconLength]);
 Recon_Agonist = nan([TableHeight,ReconLength]);
 Recon_Antagonist = nan([TableHeight,ReconLength]);
-Recon_Cz = nan([TableHeight,ReconLength]);
 
 % Reconstruction fits
-fit_beta = nan([TableHeight,2]);
 fit_agonist = nan([TableHeight,2]);
 fit_antagonist = nan([TableHeight,2]);
-fit_Cz = nan([TableHeight,2]);
 
-% Residual SRM Outputs (w/ beta)
+% Residual
 Residual = nan([TableHeight,ReconLength]);
-Gains_Residual_beta = nan([TableHeight,2]);
-Recon_Residual_beta = nan([TableHeight,ReconLength]);
-fit_residual_beta = nan([TableHeight,2]);
-
-% Dual SRM Outputs (w/ beta as predictor)
-Gains_Ag_TotalDual_beta = nan([TableHeight,6]);
-Recon_Agonist_TotalDual_beta = nan([TableHeight,ReconLength]);
-fit_agonist_TotalDual_beta = nan([TableHeight,2]);
-
-% Residual SRM Outputs (w/ Cz)
-Gains_Residual_Cz = nan([TableHeight,2]);
-Recon_Residual_Cz = nan([TableHeight,ReconLength]);
-fit_residual_Cz = nan([TableHeight,2]);
-
-% Dual SRM Outputs (w/ Cz as predictor)
-Gains_Ag_TotalDual_Cz = nan([TableHeight,6]);
-Recon_Agonist_TotalDual_Cz = nan([TableHeight,ReconLength]);
-fit_agonist_TotalDual_Cz = nan([TableHeight,2]);
 
 % Residual SRM Outputs (w/ CoM)
 Gains_Residual_CoM = nan([TableHeight,4]);
@@ -91,24 +74,64 @@ Gains_Ag_TotalDual_CoM = nan([TableHeight,8]);
 Recon_Agonist_TotalDual_CoM = nan([TableHeight,ReconLength]);
 fit_agonist_TotalDual_CoM = nan([TableHeight,2]);
 
-temp_Table = table(Residual, Gains_Ag, Gains_Antag, Gains_Beta, Gains_Cz, Recon_Beta, Recon_Cz, Recon_Agonist,...
-    Recon_Antagonist, fit_beta, fit_Cz, fit_agonist, fit_antagonist, Gains_Ag_TotalDual_beta,...
-    Recon_Agonist_TotalDual_beta, fit_agonist_TotalDual_beta,...
-    Gains_Residual_beta, Recon_Residual_beta, fit_residual_beta, Gains_Ag_TotalDual_Cz,...
-    Recon_Agonist_TotalDual_Cz, fit_agonist_TotalDual_Cz,...
-    Gains_Residual_Cz, Recon_Residual_Cz, fit_residual_Cz,...
+temp_Table = table(Residual, Gains_Ag, Gains_Antag, Recon_Agonist,...
+    Recon_Antagonist, fit_agonist, fit_antagonist,...
     Gains_Ag_TotalDual_CoM,...
     Recon_Agonist_TotalDual_CoM, fit_agonist_TotalDual_CoM,...
     Gains_Residual_CoM, Recon_Residual_CoM, fit_residual_CoM,Recon_time,...
-    'VariableNames',{'Residual','Gains_Ag', 'Gains_Antag', 'Gains_Beta', 'Gains_Cz', 'Recon_Beta', 'Recon_Cz', 'Recon_Agonist',...
-    'Recon_Antagonist', 'fit_beta', 'fit_Cz', 'fit_agonist', 'fit_antagonist', 'Gains_Ag_TotalDual_beta',...
-    'Recon_Agonist_TotalDual_beta','fit_agonist_TotalDual_beta',...
-    'Gains_Residual_beta', 'Recon_Residual_beta', 'fit_residual_beta', 'Gains_Ag_TotalDual_Cz',...
-    'Recon_Agonist_TotalDual_Cz', 'fit_agonist_TotalDual_Cz',...
-    'Gains_Residual_Cz', 'Recon_Residual_Cz', 'fit_residual_Cz',...
+    'VariableNames',{'Residual','Gains_Ag', 'Gains_Antag', 'Recon_Agonist',...
+    'Recon_Antagonist', 'fit_agonist', 'fit_antagonist',...
     'Gains_Ag_TotalDual_CoM',...
     'Recon_Agonist_TotalDual_CoM', 'fit_agonist_TotalDual_CoM',...
     'Gains_Residual_CoM', 'Recon_Residual_CoM', 'fit_residual_CoM','Recon_time'});
+
+% cSRM variables
+if cSRMs_opt
+    Gains_Beta = nan([TableHeight,4]);
+    Gains_Cz = nan([TableHeight,4]);Recon_Cz = nan([TableHeight,ReconLength]);
+    Recon_Beta = nan([TableHeight,ReconLength]);
+    fit_beta = nan([TableHeight,2]);
+    fit_Cz = nan([TableHeight,2]);
+    %  Residual SRM Outputs (w/ beta)
+    Gains_Residual_beta = nan([TableHeight,2]);
+    Recon_Residual_beta = nan([TableHeight,ReconLength]);
+    fit_residual_beta = nan([TableHeight,2]);
+    % Dual SRM Outputs (w/ beta as predictor)
+    Gains_Ag_TotalDual_beta = nan([TableHeight,6]);
+    Recon_Agonist_TotalDual_beta = nan([TableHeight,ReconLength]);
+    fit_agonist_TotalDual_beta = nan([TableHeight,2]);
+    
+    % Residual SRM Outputs (w/ Cz)
+    Gains_Residual_Cz = nan([TableHeight,2]);
+    Recon_Residual_Cz = nan([TableHeight,ReconLength]);
+    fit_residual_Cz = nan([TableHeight,2]);
+    
+    % Dual SRM Outputs (w/ Cz as predictor)
+    Gains_Ag_TotalDual_Cz = nan([TableHeight,6]);
+    Recon_Agonist_TotalDual_Cz = nan([TableHeight,ReconLength]);
+    fit_agonist_TotalDual_Cz = nan([TableHeight,2]);
+    
+    
+    temp_Table = table(Residual, Gains_Ag, Gains_Antag, Gains_Beta, Gains_Cz, Recon_Beta, Recon_Cz, Recon_Agonist,...
+        Recon_Antagonist, fit_beta, fit_Cz, fit_agonist, fit_antagonist, Gains_Ag_TotalDual_beta,...
+        Recon_Agonist_TotalDual_beta, fit_agonist_TotalDual_beta,...
+        Gains_Residual_beta, Recon_Residual_beta, fit_residual_beta, Gains_Ag_TotalDual_Cz,...
+        Recon_Agonist_TotalDual_Cz, fit_agonist_TotalDual_Cz,...
+        Gains_Residual_Cz, Recon_Residual_Cz, fit_residual_Cz,...
+        Gains_Ag_TotalDual_CoM,...
+        Recon_Agonist_TotalDual_CoM, fit_agonist_TotalDual_CoM,...
+        Gains_Residual_CoM, Recon_Residual_CoM, fit_residual_CoM,Recon_time,...
+        'VariableNames',{'Residual','Gains_Ag', 'Gains_Antag', 'Gains_Beta', 'Gains_Cz', 'Recon_Beta', 'Recon_Cz', 'Recon_Agonist',...
+        'Recon_Antagonist', 'fit_beta', 'fit_Cz', 'fit_agonist', 'fit_antagonist', 'Gains_Ag_TotalDual_beta',...
+        'Recon_Agonist_TotalDual_beta','fit_agonist_TotalDual_beta',...
+        'Gains_Residual_beta', 'Recon_Residual_beta', 'fit_residual_beta', 'Gains_Ag_TotalDual_Cz',...
+        'Recon_Agonist_TotalDual_Cz', 'fit_agonist_TotalDual_Cz',...
+        'Gains_Residual_Cz', 'Recon_Residual_Cz', 'fit_residual_Cz',...
+        'Gains_Ag_TotalDual_CoM',...
+        'Recon_Agonist_TotalDual_CoM', 'fit_agonist_TotalDual_CoM',...
+        'Gains_Residual_CoM', 'Recon_Residual_CoM', 'fit_residual_CoM','Recon_time'});
+    
+end
 
 dataAv = [dataAv temp_Table];
 % clear dummy variables from above
@@ -207,7 +230,7 @@ for Participant = participants' % iterate across each participant
             %% Run mSRM on Agonist
             % identify braking response in agonist
             if strcmp(analysisType,'Threshold') % predictors w/ thresholding prior to summing
-                predictorsmSRM = [threshold(a_ag(ind_time)); threshold(v_ag(ind_time)); threshold(d_ag(ind_time))]; 
+                predictorsmSRM = [threshold(a_ag(ind_time)); threshold(v_ag(ind_time)); threshold(d_ag(ind_time))];
             else % predictors w/o thresholding prior to summing
                 predictorsmSRM = [a_ag(ind_time); v_ag(ind_time); d_ag(ind_time)];
             end
@@ -217,11 +240,11 @@ for Participant = participants' % iterate across each participant
                 eRecon_ag = eRecon_ag + backLev_agonist;
                 agonist = agonist + backLev_agonist;
             end
-
+            
             %% Run SRM on Antagonist
             % identify braking response in antagonist
             if strcmp(analysisType,'Threshold') % predictors w/ thresholding prior to summing
-                predictorsBraking = [threshold(a_antag(ind_time)); threshold(v_antag(ind_time)); threshold(d_antag(ind_time))]; 
+                predictorsBraking = [threshold(a_antag(ind_time)); threshold(v_antag(ind_time)); threshold(d_antag(ind_time))];
             else % predictors w/o thresholding prior to summing
                 predictorsBraking = [a_antag(ind_time); v_antag(ind_time); d_antag(ind_time)]; % predictors w/o thresholding
             end
@@ -231,7 +254,7 @@ for Participant = participants' % iterate across each participant
             
             % identify destabilizing response in antagonist
             if strcmp(analysisType,'Threshold') % predictors w/ thresholding prior to summing
-                predictorsDestabilizing = [threshold(-a_antag(ind_time)); threshold(-v_antag(ind_time)); threshold(-d_antag(ind_time))]; 
+                predictorsDestabilizing = [threshold(-a_antag(ind_time)); threshold(-v_antag(ind_time)); threshold(-d_antag(ind_time))];
             else % predictors w/o thresholding prior to summing
                 predictorsDestabilizing = [-a_antag(ind_time); -v_antag(ind_time); -d_antag(ind_time)];
             end
@@ -336,38 +359,44 @@ for Participant = participants' % iterate across each participant
             dataAv.Recon_time(ind_cond,:) = atime(ind_time);
             dataAv.Gains_Ag(ind_cond,:) = x_ag;
             dataAv.Gains_Antag(ind_cond,:) = xTotal_an;
-            dataAv.Gains_Beta(ind_cond,:) = x_eeg_beta;
-            dataAv.Recon_Beta(ind_cond,:) = eegRecon_beta;
             dataAv.Recon_Agonist(ind_cond,:) = eRecon_ag;
             dataAv.Recon_Antagonist(ind_cond,:) = eTotalRecon_antag;
-            dataAv.fit_beta(ind_cond,:) = fit_eeg_beta;
+            
             dataAv.fit_agonist(ind_cond,:) = fit_ag;
             dataAv.fit_antagonist(ind_cond,:) = fitTotal_an;
             
-            dataAv.Gains_Cz(ind_cond,:) = x_eeg_Cz;
-            dataAv.Recon_Cz(ind_cond,:) = eegRecon_Cz;
-            dataAv.fit_Cz(ind_cond,:) = fit_eeg_Cz;
+            if cSRMs_opt
+                dataAv.Gains_Beta(ind_cond,:) = x_eeg_beta;
+                dataAv.Recon_Beta(ind_cond,:) = eegRecon_beta;
+                dataAv.fit_beta(ind_cond,:) = fit_eeg_beta;
+                dataAv.Gains_Cz(ind_cond,:) = x_eeg_Cz;
+                dataAv.Recon_Cz(ind_cond,:) = eegRecon_Cz;
+                dataAv.fit_Cz(ind_cond,:) = fit_eeg_Cz;
+                %DualSRM outputs (beta predictor)
+                dataAv.Gains_Ag_TotalDual_beta(ind_cond,:) = xTotal_ag_dual_beta;
+                dataAv.Recon_Agonist_TotalDual_beta(ind_cond,:) = eTotalRecon_ag_dual_beta;
+                dataAv.fit_agonist_TotalDual_beta(ind_cond,:) = fitTotal_ag_dual_beta;
+                
+                %ResidualSRM outputs (Beta)
+                dataAv.Residual(ind_cond,:) = residual;
+                dataAv.Gains_Residual_beta(ind_cond,:) = x_residual_beta;
+                dataAv.Recon_Residual_beta(ind_cond,:) = eRecon_residual_beta;
+                dataAv.fit_residual_beta(ind_cond,:) = fit_residual_beta;
+                
+                %DualSRM outputs (Cz predictor)
+                dataAv.Gains_Ag_TotalDual_Cz(ind_cond,:) = xTotal_ag_dual_Cz;
+                dataAv.Recon_Agonist_TotalDual_Cz(ind_cond,:) = eTotalRecon_ag_dual_Cz;
+                dataAv.fit_agonist_TotalDual_Cz(ind_cond,:) = fitTotal_ag_dual_Cz;
+                
+                %ResidualSRM outputs (Cz)
+                dataAv.Gains_Residual_Cz(ind_cond,:) = x_residual_Cz;
+                dataAv.Recon_Residual_Cz(ind_cond,:) = eRecon_residual_Cz;
+                dataAv.fit_residual_Cz(ind_cond,:) = fit_residual_Cz;
+                
+                
+            end
             
-            %DualSRM outputs (beta predictor)
-            dataAv.Gains_Ag_TotalDual_beta(ind_cond,:) = xTotal_ag_dual_beta;
-            dataAv.Recon_Agonist_TotalDual_beta(ind_cond,:) = eTotalRecon_ag_dual_beta;
-            dataAv.fit_agonist_TotalDual_beta(ind_cond,:) = fitTotal_ag_dual_beta;
             
-            %ResidualSRM outputs (Beta)
-            dataAv.Residual(ind_cond,:) = residual;
-            dataAv.Gains_Residual_beta(ind_cond,:) = x_residual_beta;
-            dataAv.Recon_Residual_beta(ind_cond,:) = eRecon_residual_beta;
-            dataAv.fit_residual_beta(ind_cond,:) = fit_residual_beta;
-            
-            %DualSRM outputs (Cz predictor)
-            dataAv.Gains_Ag_TotalDual_Cz(ind_cond,:) = xTotal_ag_dual_Cz;
-            dataAv.Recon_Agonist_TotalDual_Cz(ind_cond,:) = eTotalRecon_ag_dual_Cz;
-            dataAv.fit_agonist_TotalDual_Cz(ind_cond,:) = fitTotal_ag_dual_Cz;
-            
-            %ResidualSRM outputs (Cz)
-            dataAv.Gains_Residual_Cz(ind_cond,:) = x_residual_Cz;
-            dataAv.Recon_Residual_Cz(ind_cond,:) = eRecon_residual_Cz;
-            dataAv.fit_residual_Cz(ind_cond,:) = fit_residual_Cz;
             
             %DualSRM outputs (CoM)
             dataAv.Gains_Ag_TotalDual_CoM(ind_cond,:) = xTotal_ag_dual_CoM;

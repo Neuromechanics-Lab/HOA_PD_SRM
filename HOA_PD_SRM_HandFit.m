@@ -56,8 +56,11 @@ elseif direction == 270 %backward pert
     agonist = dataAv.EMG_MGAS_L_norm(ind_row,:); tag_ag = 'MG'; %ag_norm = dataAv.EMG_MGAS_L_norm(ind_row,:);
 end
 %% specify EEG data
-Cz = dataAv.Cz_norm(ind_row,:);
-beta = dataAv.beta_ersp_norm(ind_row,:);
+try
+    Cz = dataAv.Cz_norm(ind_row,:);
+    beta = dataAv.beta_ersp_norm(ind_row,:);
+catch
+end
 
 %% Specify appropriate neurophysiological data, SRM recon, and gains
 if strcmp(ReconName,"Recon_Agonist")
