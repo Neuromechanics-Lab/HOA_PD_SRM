@@ -4,7 +4,7 @@ addpath('D:\Users\SBOEBIN\Documents\MATLAB\matlabUtilities-master')
 % load data
 fdir = 'X:\ting\shared_ting\Scott\HOA_PD SRM\';
 savedir = 'X:\ting\shared_ting\Scott\HOA_PD SRM\';
-filename = 'HOA_PD_SRM_Outputs__03-Apr-2024';
+filename = 'HOA_PD_SRM_Outputs__24-Apr-2024';
 load([fdir filename '.mat'])
 
 

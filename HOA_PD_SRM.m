@@ -17,7 +17,7 @@ savedir = '\\cosmic.bme.emory.edu\labs\ting\shared_ting\Scott\HOA_PD SRM\';
 dataAv(strcmp(dataAv.patient,"PD07"),:) = []; % PD07 excluded due to brain tumor
 dataAv(strcmp(dataAv.patient,"PD17"),:) = []; % PD17 excluded due to peripheral neuropothy
 
-% dataAv(dataAv.condition == 12,:) = []; % HOA 19 and 20 had a larger perturbation magnitude included for piloting purposes.  
+dataAv(dataAv.condition == 12,:) = []; % HOA 19 and 20 had a larger perturbation magnitude included for piloting purposes.  
 
 %% User inputs
 removeBackLev = 1;
