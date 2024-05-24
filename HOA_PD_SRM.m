@@ -3,35 +3,41 @@
 %% load data & add MATLAB utility functions
 clear; close all; tic;
 % change top which computer you are running this on
-addpath('D:\Users\SBOEBIN\Documents\MATLAB\SRMUtilities')
+% addpath('D:\Users\SBOEBIN\Documents\MATLAB\SRMUtilities')
 addpath('D:\Users\SBOEBIN\Documents\MATLAB\matlabUtilities-master')
-addpath('C:\Users\seboe\OneDrive - Emory University\Documents\Grad School\Neuromechanics Lab\SRM\SRM-Practice\SRMUtilities')
+% addpath('C:\Users\seboe\OneDrive - Emory University\Documents\Grad School\Neuromechanics Lab\SRM\SRM-Practice\SRMUtilities')
 addpath('C:\Users\seboe\OneDrive - Emory University\Documents\Grad School\Neuromechanics Lab\SRM\matlabUtilities-master')
 
-load('D:\Users\SBOEBIN\Documents\MATLAB\Post creatfitsData Output\HOA_PD_DataTables_interp_norm_06-Dec-2023.mat') %output measures Table (EEG, EMG, etc.)
-
+% load('D:\Users\SBOEBIN\Documents\MATLAB\Post creatfitsData Output\HOA_PD_DataTables_interp_norm_06-Dec-2023.mat') %output measures Table (EEG, EMG, etc.)
+load('D:\Users\SBOEBIN\Documents\MATLAB\Post creatfitsData Output\HOA_PD_DataTables_04-Oct-2023.mat') % output measures, no EEG
 % dataAv.Cz = double(dataAv.Cz); %convert Cz(t) to class double for SRM recon
 savedir = '\\cosmic.bme.emory.edu\labs\ting\shared_ting\Scott\HOA_PD SRM\';
 
+%% remove participant/magnitude/direction pairs that will not be reconstructed 
+dataAv(strcmp(dataAv.patient,"PD07"),:) = []; % PD07 excluded due to brain tumor
+dataAv(strcmp(dataAv.patient,"PD17"),:) = []; % PD17 excluded due to peripheral neuropothy
+
+dataAv(dataAv.condition == 12,:) = []; % HOA 19 and 20 had a larger perturbation magnitude included for piloting purposes.  
+
 %% User inputs
 removeBackLev = 1;
-% Saving options (if = 1 then will save)
+% Saving options (if true then will save output)
 saveopt = true; %Output
 % SRM reconstruction options
-cSRMs_opt = true;
+cSRMs_opt = false;
 % Grouping Variables
 direcs = unique(dataAv.pertdir_calc_round_deg); % directions to be analyzed (90 and 270)
 % direcs = 270;
 mags = unique(dataAv.condition);
-% mags = mags(3);
+% mags = mags(1);
 % groups = unique(dataAv.group); %Group marker ("HOA" or "PD" -- string)
 participants = unique(dataAv.patient); %Unique subject code (i.e. "HOA02" -- string)
 % participants = ["HOA02"; "HOA04"; "HOA08"; "HOA13"; "HOA19";...
 %     "PD03"; "PD11"; "PD12"; "PD13"; "PD15"; "PD17"; "PD20"]; % fit specific participants only
-% participants = ["HOA09"; "PD02";];
+% participants = "PD05";
 dataAv = dataAv(ismember(dataAv.patient, participants),:); % eliminate rows of dataAv if they are not part of "participants"
-analysisType = ''; % to modify save name with unique identifier
-
+% analysisType = ''; % to modify save name with unique identifier
+analysisType = 'LR_Averaged'; % to modify save name with unique identifier
 %% Add SRM Outputs to the data table
 %Find common time span for all variables (MoCap, EEG, EMG)
 % EEG times (time_eeg and time_ersp are in ms, atime is in s)
@@ -41,45 +47,22 @@ ind_time = find(dataAv.atime(1,:) > min_time & dataAv.atime(1,:) <= max_time); %
 
 TableHeight = size(dataAv,1);
 ReconLength = length(dataAv.atime(1,ind_time)); %length of SRM Recon
-% Recon Time 
+% Recon Time
 Recon_time = nan([TableHeight,ReconLength]);
 % Feedback Gains
 Gains_Ag = nan([TableHeight,4]);
 Gains_Antag = nan([TableHeight,8]);
-Gains_Beta = nan([TableHeight,4]);
-Gains_Cz = nan([TableHeight,4]);
+
 % SRM Reconstructions
-Recon_Beta = nan([TableHeight,ReconLength]);
 Recon_Agonist = nan([TableHeight,ReconLength]);
 Recon_Antagonist = nan([TableHeight,ReconLength]);
-Recon_Cz = nan([TableHeight,ReconLength]);
 
 % Reconstruction fits
-fit_beta = nan([TableHeight,2]);
 fit_agonist = nan([TableHeight,2]);
 fit_antagonist = nan([TableHeight,2]);
-fit_Cz = nan([TableHeight,2]);
 
-% Residual SRM Outputs (w/ beta)
+% Residual
 Residual = nan([TableHeight,ReconLength]);
-Gains_Residual_beta = nan([TableHeight,2]);
-Recon_Residual_beta = nan([TableHeight,ReconLength]);
-fit_residual_beta = nan([TableHeight,2]);
-
-% Dual SRM Outputs (w/ beta as predictor)
-Gains_Ag_TotalDual_beta = nan([TableHeight,6]);
-Recon_Agonist_TotalDual_beta = nan([TableHeight,ReconLength]);
-fit_agonist_TotalDual_beta = nan([TableHeight,2]);
-
-% Residual SRM Outputs (w/ Cz)
-Gains_Residual_Cz = nan([TableHeight,2]);
-Recon_Residual_Cz = nan([TableHeight,ReconLength]);
-fit_residual_Cz = nan([TableHeight,2]);
-
-% Dual SRM Outputs (w/ Cz as predictor)
-Gains_Ag_TotalDual_Cz = nan([TableHeight,6]);
-Recon_Agonist_TotalDual_Cz = nan([TableHeight,ReconLength]);
-fit_agonist_TotalDual_Cz = nan([TableHeight,2]);
 
 % Residual SRM Outputs (w/ CoM)
 Gains_Residual_CoM = nan([TableHeight,4]);
@@ -91,24 +74,64 @@ Gains_Ag_TotalDual_CoM = nan([TableHeight,8]);
 Recon_Agonist_TotalDual_CoM = nan([TableHeight,ReconLength]);
 fit_agonist_TotalDual_CoM = nan([TableHeight,2]);
 
-temp_Table = table(Residual, Gains_Ag, Gains_Antag, Gains_Beta, Gains_Cz, Recon_Beta, Recon_Cz, Recon_Agonist,...
-    Recon_Antagonist, fit_beta, fit_Cz, fit_agonist, fit_antagonist, Gains_Ag_TotalDual_beta,...
-    Recon_Agonist_TotalDual_beta, fit_agonist_TotalDual_beta,...
-    Gains_Residual_beta, Recon_Residual_beta, fit_residual_beta, Gains_Ag_TotalDual_Cz,...
-    Recon_Agonist_TotalDual_Cz, fit_agonist_TotalDual_Cz,...
-    Gains_Residual_Cz, Recon_Residual_Cz, fit_residual_Cz,...
+temp_Table = table(Residual, Gains_Ag, Gains_Antag, Recon_Agonist,...
+    Recon_Antagonist, fit_agonist, fit_antagonist,...
     Gains_Ag_TotalDual_CoM,...
     Recon_Agonist_TotalDual_CoM, fit_agonist_TotalDual_CoM,...
     Gains_Residual_CoM, Recon_Residual_CoM, fit_residual_CoM,Recon_time,...
-    'VariableNames',{'Residual','Gains_Ag', 'Gains_Antag', 'Gains_Beta', 'Gains_Cz', 'Recon_Beta', 'Recon_Cz', 'Recon_Agonist',...
-    'Recon_Antagonist', 'fit_beta', 'fit_Cz', 'fit_agonist', 'fit_antagonist', 'Gains_Ag_TotalDual_beta',...
-    'Recon_Agonist_TotalDual_beta','fit_agonist_TotalDual_beta',...
-    'Gains_Residual_beta', 'Recon_Residual_beta', 'fit_residual_beta', 'Gains_Ag_TotalDual_Cz',...
-    'Recon_Agonist_TotalDual_Cz', 'fit_agonist_TotalDual_Cz',...
-    'Gains_Residual_Cz', 'Recon_Residual_Cz', 'fit_residual_Cz',...
+    'VariableNames',{'Residual','Gains_Ag', 'Gains_Antag', 'Recon_Agonist',...
+    'Recon_Antagonist', 'fit_agonist', 'fit_antagonist',...
     'Gains_Ag_TotalDual_CoM',...
     'Recon_Agonist_TotalDual_CoM', 'fit_agonist_TotalDual_CoM',...
     'Gains_Residual_CoM', 'Recon_Residual_CoM', 'fit_residual_CoM','Recon_time'});
+
+% cSRM variables
+if cSRMs_opt
+    Gains_Beta = nan([TableHeight,4]);
+    Gains_Cz = nan([TableHeight,4]);Recon_Cz = nan([TableHeight,ReconLength]);
+    Recon_Beta = nan([TableHeight,ReconLength]);
+    fit_beta = nan([TableHeight,2]);
+    fit_Cz = nan([TableHeight,2]);
+    %  Residual SRM Outputs (w/ beta)
+    Gains_Residual_beta = nan([TableHeight,2]);
+    Recon_Residual_beta = nan([TableHeight,ReconLength]);
+    fit_residual_beta = nan([TableHeight,2]);
+    % Dual SRM Outputs (w/ beta as predictor)
+    Gains_Ag_TotalDual_beta = nan([TableHeight,6]);
+    Recon_Agonist_TotalDual_beta = nan([TableHeight,ReconLength]);
+    fit_agonist_TotalDual_beta = nan([TableHeight,2]);
+    
+    % Residual SRM Outputs (w/ Cz)
+    Gains_Residual_Cz = nan([TableHeight,2]);
+    Recon_Residual_Cz = nan([TableHeight,ReconLength]);
+    fit_residual_Cz = nan([TableHeight,2]);
+    
+    % Dual SRM Outputs (w/ Cz as predictor)
+    Gains_Ag_TotalDual_Cz = nan([TableHeight,6]);
+    Recon_Agonist_TotalDual_Cz = nan([TableHeight,ReconLength]);
+    fit_agonist_TotalDual_Cz = nan([TableHeight,2]);
+    
+    
+    temp_Table = table(Residual, Gains_Ag, Gains_Antag, Gains_Beta, Gains_Cz, Recon_Beta, Recon_Cz, Recon_Agonist,...
+        Recon_Antagonist, fit_beta, fit_Cz, fit_agonist, fit_antagonist, Gains_Ag_TotalDual_beta,...
+        Recon_Agonist_TotalDual_beta, fit_agonist_TotalDual_beta,...
+        Gains_Residual_beta, Recon_Residual_beta, fit_residual_beta, Gains_Ag_TotalDual_Cz,...
+        Recon_Agonist_TotalDual_Cz, fit_agonist_TotalDual_Cz,...
+        Gains_Residual_Cz, Recon_Residual_Cz, fit_residual_Cz,...
+        Gains_Ag_TotalDual_CoM,...
+        Recon_Agonist_TotalDual_CoM, fit_agonist_TotalDual_CoM,...
+        Gains_Residual_CoM, Recon_Residual_CoM, fit_residual_CoM,Recon_time,...
+        'VariableNames',{'Residual','Gains_Ag', 'Gains_Antag', 'Gains_Beta', 'Gains_Cz', 'Recon_Beta', 'Recon_Cz', 'Recon_Agonist',...
+        'Recon_Antagonist', 'fit_beta', 'fit_Cz', 'fit_agonist', 'fit_antagonist', 'Gains_Ag_TotalDual_beta',...
+        'Recon_Agonist_TotalDual_beta','fit_agonist_TotalDual_beta',...
+        'Gains_Residual_beta', 'Recon_Residual_beta', 'fit_residual_beta', 'Gains_Ag_TotalDual_Cz',...
+        'Recon_Agonist_TotalDual_Cz', 'fit_agonist_TotalDual_Cz',...
+        'Gains_Residual_Cz', 'Recon_Residual_Cz', 'fit_residual_Cz',...
+        'Gains_Ag_TotalDual_CoM',...
+        'Recon_Agonist_TotalDual_CoM', 'fit_agonist_TotalDual_CoM',...
+        'Gains_Residual_CoM', 'Recon_Residual_CoM', 'fit_residual_CoM','Recon_time'});
+    
+end
 
 dataAv = [dataAv temp_Table];
 % clear dummy variables from above
@@ -151,11 +174,29 @@ for Participant = participants' % iterate across each participant
             
             %specify which muscle is acting as an agonist/antagonist
             if direction == 90 %forward pert
-                agonist = dataAv.EMG_TA_L_norm(ind_cond,:); tag_ag='TA'; ag_norm = dataAv.EMG_TA_L_norm(ind_cond,:);
-                antagonist = dataAv.EMG_MGAS_L_norm(ind_cond,:); tag_antag='MG'; antag_norm = dataAv.EMG_MGAS_L_norm(ind_cond,:);
+                if strcmp(analysisType,'LR_Averaged')
+                    agonist = (dataAv.EMG_TA_L_norm(ind_cond,:) + dataAv.EMG_TA_R_norm(ind_cond,:))/2; 
+                    tag_ag='TA'; ag_norm = max([dataAv.EMG_TA_L_norm(ind_cond,:) dataAv.EMG_TA_R_norm(ind_cond,:)]);
+                    antagonist = (dataAv.EMG_MGAS_L_norm(ind_cond,:) + dataAv.EMG_MGAS_R_norm(ind_cond,:))/2; 
+                    tag_antag='MG'; antag_norm = max([dataAv.EMG_MGAS_L_norm(ind_cond,:) dataAv.EMG_MGAS_R_norm(ind_cond,:)]);
+                elseif strcmp(analysisType,'')
+                    agonist = dataAv.EMG_TA_L_norm(ind_cond,:); 
+                    tag_ag='TA'; ag_norm = dataAv.EMG_TA_L_norm(ind_cond,:);
+                    antagonist = dataAv.EMG_MGAS_L_norm(ind_cond,:);
+                    tag_antag='MG'; antag_norm = dataAv.EMG_MGAS_L_norm(ind_cond,:);
+                end
             elseif direction == 270 %backward pert
-                antagonist = dataAv.EMG_TA_L_norm(ind_cond,:); tag_antag='TA'; antag_norm = dataAv.EMG_TA_L_norm(ind_cond,:);
-                agonist = dataAv.EMG_MGAS_L_norm(ind_cond,:); tag_ag='MG'; ag_norm = dataAv.EMG_MGAS_L_norm(ind_cond,:);
+                if strcmp(analysisType,'LR_Averaged')
+                    antagonist = (dataAv.EMG_TA_L_norm(ind_cond,:) + dataAv.EMG_TA_R_norm(ind_cond,:))/2;
+                    tag_antag='TA'; antag_norm = max([dataAv.EMG_TA_L_norm(ind_cond,:) dataAv.EMG_TA_R_norm(ind_cond,:)]);
+                    agonist = (dataAv.EMG_MGAS_L_norm(ind_cond,:) + dataAv.EMG_MGAS_R_norm(ind_cond,:))/2;
+                    tag_ag='MG'; ag_norm = max([dataAv.EMG_MGAS_L_norm(ind_cond,:) dataAv.EMG_MGAS_R_norm(ind_cond,:)]);
+                elseif strcmp(analysisType,'')
+                    antagonist = dataAv.EMG_TA_L_norm(ind_cond,:);
+                    tag_antag='TA'; antag_norm = dataAv.EMG_TA_L_norm(ind_cond,:);
+                    agonist = dataAv.EMG_MGAS_L_norm(ind_cond,:);
+                    tag_ag='MG'; ag_norm = dataAv.EMG_MGAS_L_norm(ind_cond,:);
+                end
             else
                 error('Unspecified Direction')
             end
@@ -204,48 +245,50 @@ for Participant = participants' % iterate across each participant
                 end
             end
             
+            %% Run mSRM on Agonist
+            % identify braking response in agonist
+            if strcmp(analysisType,'Threshold') % predictors w/ thresholding prior to summing
+                predictorsmSRM = [threshold(a_ag(ind_time)); threshold(v_ag(ind_time)); threshold(d_ag(ind_time))];
+            else % predictors w/o thresholding prior to summing
+                predictorsmSRM = [a_ag(ind_time); v_ag(ind_time); d_ag(ind_time)];
+            end
+            
+            [x_ag([1:4]), eRecon_ag, fit_ag] = fitTraditionalSRM(agonist(ind_time),atime(ind_time),predictorsmSRM,subjID,mag,direction);
+            if removeBackLev
+                eRecon_ag = eRecon_ag + backLev_agonist;
+                agonist = agonist + backLev_agonist;
+            end
+            
             %% Run SRM on Antagonist
             % identify braking response in antagonist
-            predictorsmSRM = [a_antag(ind_time); v_antag(ind_time); d_antag(ind_time)];
+            if strcmp(analysisType,'Threshold') % predictors w/ thresholding prior to summing
+                predictorsBraking = [threshold(a_antag(ind_time)); threshold(v_antag(ind_time)); threshold(d_antag(ind_time))];
+            else % predictors w/o thresholding prior to summing
+                predictorsBraking = [a_antag(ind_time); v_antag(ind_time); d_antag(ind_time)]; % predictors w/o thresholding
+            end
             
             [x1(1:4), eRecon_antag_Braking, fit] = fitBrakingSRM(...
-                antagonist(ind_time),atime(ind_time),predictorsmSRM,subjID,mag,direction);
+                antagonist(ind_time),atime(ind_time),predictorsBraking,subjID,mag,direction);
             
             % identify destabilizing response in antagonist
-            predictorsDestabilizing = [-a_antag(ind_time); -v_antag(ind_time); -d_antag(ind_time)];
+            if strcmp(analysisType,'Threshold') % predictors w/ thresholding prior to summing
+                predictorsDestabilizing = [threshold(-a_antag(ind_time)); threshold(-v_antag(ind_time)); threshold(-d_antag(ind_time))];
+            else % predictors w/o thresholding prior to summing
+                predictorsDestabilizing = [-a_antag(ind_time); -v_antag(ind_time); -d_antag(ind_time)];
+            end
             
             [xPrime([5:8]), eRecon_antag_Destabilizing, fitPrime] = fitDestabilizingSRM(...
                 antagonist(ind_time),atime(ind_time),predictorsDestabilizing,subjID,mag,direction);
             
             % combine them into the initial guess for the final optimization
             X0Total = [x1([1:4]) xPrime([5:8])];
-            predictorsTotal = [predictorsmSRM; predictorsDestabilizing];
+            predictorsTotal = [predictorsBraking; predictorsDestabilizing];
             
             [xTotal_an, eTotalRecon_antag, fitTotal_an] = fitTotalSRM(...
                 antagonist(ind_time),atime(ind_time),predictorsTotal,X0Total,subjID,mag,direction);
             if removeBackLev
                 eTotalRecon_antag = eTotalRecon_antag + backLev_antagonist;
                 antagonist = antagonist + backLev_antagonist;
-            end
-            %plot
-%             figure; hold on
-%             plot(atime,antagonist); plot(atime(ind_time),eTotalRecon_antag);
-%             plot(atime(ind_time)+xTotal_an(4),xTotal_an(1)*predictorsTotal(1,:))
-%             plot(atime(ind_time)+xTotal_an(4),xTotal_an(2)*predictorsTotal(2,:))
-%             plot(atime(ind_time)+xTotal_an(4),xTotal_an(3)*predictorsTotal(3,:))
-%             plot(atime(ind_time)+xTotal_an(8),xTotal_an(5)*predictorsTotal(4,:))
-%             plot(atime(ind_time)+xTotal_an(8),xTotal_an(6)*predictorsTotal(5,:))
-%             plot(atime(ind_time)+xTotal_an(8),xTotal_an(7)*predictorsTotal(6,:))
-%             legend('antag','eTotalRecon_antag','kaB','kvB','kdB','kaD','kvD','kdD')
-            
-            %% Run mSRM on Agonist
-            % identify braking response in agonist
-            predictorsmSRM = [a_ag(ind_time); v_ag(ind_time); d_ag(ind_time)];
-            
-            [x_ag([1:4]), eRecon_ag, fit_ag] = fitTraditionalSRM(agonist(ind_time),atime(ind_time),predictorsmSRM,subjID,mag);
-            if removeBackLev
-                eRecon_ag = eRecon_ag + backLev_agonist;
-                agonist = agonist + backLev_agonist;
             end
             
             %% Calculate Residuals
@@ -299,7 +342,7 @@ for Participant = participants' % iterate across each participant
             %% Fit dual SRM (fit EMG w/ double CoM Feedback)
             X0Dual = [x_ag(1:4) x_residual_CoM(1:4)];
             predictorsDual_CoM = [predictorsmSRM; predictorsmSRM];
-            [xTotal_ag_dual_CoM, eTotalRecon_ag_dual_CoM, fitTotal_ag_dual_CoM] = fitTotalDualSRM_CoM(agonist(ind_time), atime(ind_time), predictorsDual_CoM, X0Dual, subjID, mag);
+            [xTotal_ag_dual_CoM, eTotalRecon_ag_dual_CoM, fitTotal_ag_dual_CoM] = fitTotalDualSRM_CoM(agonist(ind_time), atime(ind_time), predictorsDual_CoM, X0Dual, subjID, mag, direction);
             if removeBackLev
                 eTotalRecon_ag_dual_CoM = eTotalRecon_ag_dual_CoM + backLev_agonist;
             end
@@ -334,38 +377,44 @@ for Participant = participants' % iterate across each participant
             dataAv.Recon_time(ind_cond,:) = atime(ind_time);
             dataAv.Gains_Ag(ind_cond,:) = x_ag;
             dataAv.Gains_Antag(ind_cond,:) = xTotal_an;
-            dataAv.Gains_Beta(ind_cond,:) = x_eeg_beta;
-            dataAv.Recon_Beta(ind_cond,:) = eegRecon_beta;
             dataAv.Recon_Agonist(ind_cond,:) = eRecon_ag;
             dataAv.Recon_Antagonist(ind_cond,:) = eTotalRecon_antag;
-            dataAv.fit_beta(ind_cond,:) = fit_eeg_beta;
+            
             dataAv.fit_agonist(ind_cond,:) = fit_ag;
             dataAv.fit_antagonist(ind_cond,:) = fitTotal_an;
             
-            dataAv.Gains_Cz(ind_cond,:) = x_eeg_Cz;
-            dataAv.Recon_Cz(ind_cond,:) = eegRecon_Cz;
-            dataAv.fit_Cz(ind_cond,:) = fit_eeg_Cz;
+            if cSRMs_opt
+                dataAv.Gains_Beta(ind_cond,:) = x_eeg_beta;
+                dataAv.Recon_Beta(ind_cond,:) = eegRecon_beta;
+                dataAv.fit_beta(ind_cond,:) = fit_eeg_beta;
+                dataAv.Gains_Cz(ind_cond,:) = x_eeg_Cz;
+                dataAv.Recon_Cz(ind_cond,:) = eegRecon_Cz;
+                dataAv.fit_Cz(ind_cond,:) = fit_eeg_Cz;
+                %DualSRM outputs (beta predictor)
+                dataAv.Gains_Ag_TotalDual_beta(ind_cond,:) = xTotal_ag_dual_beta;
+                dataAv.Recon_Agonist_TotalDual_beta(ind_cond,:) = eTotalRecon_ag_dual_beta;
+                dataAv.fit_agonist_TotalDual_beta(ind_cond,:) = fitTotal_ag_dual_beta;
+                
+                %ResidualSRM outputs (Beta)
+                dataAv.Residual(ind_cond,:) = residual;
+                dataAv.Gains_Residual_beta(ind_cond,:) = x_residual_beta;
+                dataAv.Recon_Residual_beta(ind_cond,:) = eRecon_residual_beta;
+                dataAv.fit_residual_beta(ind_cond,:) = fit_residual_beta;
+                
+                %DualSRM outputs (Cz predictor)
+                dataAv.Gains_Ag_TotalDual_Cz(ind_cond,:) = xTotal_ag_dual_Cz;
+                dataAv.Recon_Agonist_TotalDual_Cz(ind_cond,:) = eTotalRecon_ag_dual_Cz;
+                dataAv.fit_agonist_TotalDual_Cz(ind_cond,:) = fitTotal_ag_dual_Cz;
+                
+                %ResidualSRM outputs (Cz)
+                dataAv.Gains_Residual_Cz(ind_cond,:) = x_residual_Cz;
+                dataAv.Recon_Residual_Cz(ind_cond,:) = eRecon_residual_Cz;
+                dataAv.fit_residual_Cz(ind_cond,:) = fit_residual_Cz;
+                
+                
+            end
             
-            %DualSRM outputs (beta predictor)
-            dataAv.Gains_Ag_TotalDual_beta(ind_cond,:) = xTotal_ag_dual_beta;
-            dataAv.Recon_Agonist_TotalDual_beta(ind_cond,:) = eTotalRecon_ag_dual_beta;
-            dataAv.fit_agonist_TotalDual_beta(ind_cond,:) = fitTotal_ag_dual_beta;
             
-            %ResidualSRM outputs (Beta)
-            dataAv.Residual(ind_cond,:) = residual;
-            dataAv.Gains_Residual_beta(ind_cond,:) = x_residual_beta;
-            dataAv.Recon_Residual_beta(ind_cond,:) = eRecon_residual_beta;
-            dataAv.fit_residual_beta(ind_cond,:) = fit_residual_beta;
-            
-            %DualSRM outputs (Cz predictor)
-            dataAv.Gains_Ag_TotalDual_Cz(ind_cond,:) = xTotal_ag_dual_Cz;
-            dataAv.Recon_Agonist_TotalDual_Cz(ind_cond,:) = eTotalRecon_ag_dual_Cz;
-            dataAv.fit_agonist_TotalDual_Cz(ind_cond,:) = fitTotal_ag_dual_Cz;
-            
-            %ResidualSRM outputs (Cz)
-            dataAv.Gains_Residual_Cz(ind_cond,:) = x_residual_Cz;
-            dataAv.Recon_Residual_Cz(ind_cond,:) = eRecon_residual_Cz;
-            dataAv.fit_residual_Cz(ind_cond,:) = fit_residual_Cz;
             
             %DualSRM outputs (CoM)
             dataAv.Gains_Ag_TotalDual_CoM(ind_cond,:) = xTotal_ag_dual_CoM;
@@ -402,971 +451,3 @@ if saveopt
 end
 disp('SRM Pipeline Complete!')
 toc
-
-%% Functions used for SRM recon
-
-function plotExemplarSRMFits(data)
-% function plotExemplarSRMFits(data)
-%
-% plot three example cases
-
-exemplarPatients = ["bat206" "bat114" "pdf027"];
-pertdir = 270;
-side = "L";
-
-% bat206:
-% 22F
-% MoCA = 26
-
-% bat114:
-% 64M
-% MoCA = 26
-
-% pdf027:
-% 62F
-% pd duration 4.9y
-% mds-updrs-iii 55/132
-% no freezing
-
-
-flipTA = false;
-
-XL = [0 1];
-YL = [0 1];
-
-atime = data.atime(1,:);
-lookup = atime>=min(XL)&atime<max(XL);
-fig = figure;
-for pi = 1:length(exemplarPatients)
-    ta = data(data.patient==exemplarPatients(pi)&data.pertdir==pertdir&data.side==side&data.mus=="TA",:);
-    mg = data(data.patient==exemplarPatients(pi)&data.pertdir==pertdir&data.side==side&data.mus=="MGAS",:);
-    
-    if flipTA
-        s = subplot(2,3,pi);
-        xlim(XL)
-        ylim(YL)
-        
-        plot(atime(lookup),mg.e(lookup),'k','linewidth',0.5,'clipping','off');
-        plot(atime(lookup),mg.eRecon(lookup),'g','linewidth',0.5,'clipping','off');
-        plot(atime(lookup),mg.eRecon(lookup),'k','linewidth',1,'clipping','off');
-        
-        s = subplot(2,3,pi+3)
-        xlim(XL)
-        ylim(sort(-1*YL))
-        
-        plot(atime(lookup),-ta.e(lookup),'k','linewidth',0.5,'clipping','off');
-        plot(atime(lookup),-ta.eRecon(lookup),'g','linewidth',0.5,'clipping','off');
-        plot(atime(lookup),-ta.ePrimeRecon(lookup),'r','linewidth',0.5,'clipping','off');
-        plot(atime(lookup),-ta.eTotalRecon(lookup),'k','linewidth',1,'clipping','off');
-    else
-        s = subplot(2,3,pi);
-        xlim(XL)
-        ylim(YL)
-        
-        a = area(atime(lookup),mg.eRecon(lookup));
-        a.FaceColor = [0 1 0];
-        a.EdgeColor = 'none';
-        
-        plot(atime(lookup),mg.e(lookup),'k','linewidth',0.5,'clipping','off');
-        plot(atime(lookup),mg.eRecon(lookup),'k','linewidth',1,'clipping','off');
-        
-        VAF = rsqr_uncentered(mg.e(lookup)',mg.eRecon(lookup)');
-        R2 = rsqr(mg.e(lookup)',mg.eRecon(lookup)');
-        VAFstr = "VAF = "+sprintf('%0.2f',VAF);
-        R2str = "R2 = "+sprintf('%0.2f',R2);
-        txt = text(max(s.XLim),max(s.YLim),[VAFstr;R2str]);
-        txt.HorizontalAlignment = 'right';
-        txt.VerticalAlignment = 'top';
-        
-        s = subplot(2,3,pi+3)
-        xlim(XL)
-        ylim(YL)
-        
-        a = area(atime(lookup),ta.eRecon(lookup));
-        a.FaceColor = [0 1 0];
-        a.EdgeColor = 'none';
-        a = area(atime(lookup),ta.ePrimeRecon(lookup));
-        a.FaceColor = [1 0 0];
-        a.EdgeColor = 'none';
-        plot(atime(lookup),ta.e(lookup),'k','linewidth',0.5,'clipping','off');
-        plot(atime(lookup),ta.eTotalRecon(lookup),'k','linewidth',1,'clipping','off');
-        
-        VAF = rsqr_uncentered(ta.e(lookup)',ta.eTotalRecon(lookup)');
-        R2 = rsqr(ta.e(lookup)',ta.eTotalRecon(lookup)');
-        VAFstr = "VAF = "+sprintf('%0.2f',VAF);
-        R2str = "R2 = "+sprintf('%0.2f',R2);
-        txt = text(max(s.XLim),max(s.YLim),[VAFstr;R2str]);
-        txt.HorizontalAlignment = 'right';
-        txt.VerticalAlignment = 'top';
-        
-    end
-end
-
-end
-
-function SRMFits = calculateExemplarSRMFits(fitsData)
-
-% use a common copy of the atime vector
-atime = fitsData.atime(1,:);
-
-removeBackLev = true;
-fitDestabMG = true;
-
-% loop. note that randperm here does not affect functionality and is just
-% used for debugging purposes (in order to prevent having to go through all
-% of the TA records prior to doing MG.)
-for idx = randperm(size(fitsData,1))
-    e = fitsData.e(idx,:);
-    
-    if removeBackLev
-        backLev = nanmean(e(atime<0.05));
-        e = e - backLev;
-    end
-    if fitsData.mus(idx)=="TA"&fitsData.dir(idx)=="B"
-        
-        % identify braking response in TA in backward perturbations
-        predictorsBraking = [fitsData.a(idx,:); fitsData.v(idx,:); fitsData.d(idx,:)];
-        [fitsData.x(idx,[1:4]), fitsData.eRecon(idx,:) fitsData.fit(idx,:)] = fitBrakingSRM(e,atime,predictorsBraking);
-        
-        % identify destabilizing response in TA in backward perturbations
-        predictorsDestabilizing = [fitsData.aPrime(idx,:); fitsData.vPrime(idx,:); fitsData.dPrime(idx,:)];
-        [fitsData.xPrime(idx,[5:8]), fitsData.ePrimeRecon(idx,:) fitsData.fitPrime(idx,:)] = fitDestabilizingSRM(e,atime,predictorsDestabilizing);
-        
-        % combine them into the initial guess for the final optimization
-        X0Total = [fitsData.x(idx,[1:4]) fitsData.xPrime(idx,[5:8])];
-        predictorsTotal = [predictorsBraking; predictorsDestabilizing];
-        
-        [fitsData.xTotal(idx,:), fitsData.eTotalRecon(idx,:) fitsData.fitTotal(idx,:)] = fitTotalSRM(e,atime,predictorsTotal,X0Total);
-        if removeBackLev
-            fitsData.eTotalRecon(idx,:) = fitsData.eTotalRecon(idx,:) + backLev;
-        end
-    elseif fitsData.mus(idx)=="MGAS"&fitsData.dir(idx)=="B"
-        % identify braking response in MGAS in backward perturbations
-        predictorsBraking = [fitsData.a(idx,:); fitsData.v(idx,:); fitsData.d(idx,:)];
-        [fitsData.x(idx,[1:4]), fitsData.eRecon(idx,:) fitsData.fit(idx,:)] = fitTraditionalSRM(e,atime,predictorsBraking);
-        if removeBackLev
-            fitsData.eRecon(idx,:) = fitsData.eRecon(idx,:) + backLev;
-        end
-    end
-end
-
-SRMFits = fitsData;
-
-end
-
-function SRMFits = calculateSRMFits(fitsData)
-
-% use a common copy of the atime vector
-atime = fitsData.atime(1,:);
-
-removeBackLev = true;
-fitDestabMG = true;
-
-% loop. note that randperm here does not affect functionality and is just
-% used for debugging purposes (in order to prevent having to go through all
-% of the TA records prior to doing MG.)
-for idx = randperm(size(fitsData,1))
-    e = fitsData.e(idx,:);
-    
-    if removeBackLev
-        backLev = nanmean(e(atime<0.05));
-        e = e - backLev;
-    end
-    if fitsData.mus(idx)=="TA"&fitsData.dir(idx)=="B"
-        
-        % identify braking response in TA in backward perturbations
-        predictorsBraking = [fitsData.a(idx,:); fitsData.v(idx,:); fitsData.d(idx,:)];
-        [fitsData.x(idx,[1:4]), fitsData.eRecon(idx,:) fitsData.fit(idx,:)] = fitBrakingSRM(e,atime,predictorsBraking);
-        
-        % identify destabilizing response in TA in backward perturbations
-        predictorsDestabilizing = [fitsData.aPrime(idx,:); fitsData.vPrime(idx,:); fitsData.dPrime(idx,:)];
-        [fitsData.xPrime(idx,[5:8]), fitsData.ePrimeRecon(idx,:) fitsData.fitPrime(idx,:)] = fitDestabilizingSRM(e,atime,predictorsDestabilizing);
-        
-        % combine them into the initial guess for the final optimization
-        X0Total = [fitsData.x(idx,[1:4]) fitsData.xPrime(idx,[5:8])];
-        predictorsTotal = [predictorsBraking; predictorsDestabilizing];
-        
-        [fitsData.xTotal(idx,:), fitsData.eTotalRecon(idx,:) fitsData.fitTotal(idx,:)] = fitTotalSRM(e,atime,predictorsTotal,X0Total);
-        if removeBackLev
-            fitsData.eTotalRecon(idx,:) = fitsData.eTotalRecon(idx,:) + backLev;
-        end
-    elseif fitsData.mus(idx)=="TA"&fitsData.dir(idx)=="F"
-        % identify braking response in TA in forward perturbations
-        predictorsBraking = [fitsData.a(idx,:); fitsData.v(idx,:); fitsData.d(idx,:)];
-        [fitsData.x(idx,[1:4]), fitsData.eRecon(idx,:) fitsData.fit(idx,:)] = fitTraditionalSRM(e,atime,predictorsBraking);
-        if removeBackLev
-            fitsData.eRecon(idx,:) = fitsData.eRecon(idx,:) + backLev;
-        end
-    elseif fitsData.mus(idx)=="MGAS"&fitsData.dir(idx)=="B"
-        % identify braking response in MGAS in backward perturbations
-        predictorsBraking = [fitsData.a(idx,:); fitsData.v(idx,:); fitsData.d(idx,:)];
-        [fitsData.x(idx,[1:4]), fitsData.eRecon(idx,:) fitsData.fit(idx,:)] = fitTraditionalSRM(e,atime,predictorsBraking);
-        if removeBackLev
-            fitsData.eRecon(idx,:) = fitsData.eRecon(idx,:) + backLev;
-        end
-    elseif fitsData.mus(idx)=="MGAS"&fitsData.dir(idx)=="F"
-        % identify braking response in MGAS in forward perturbations
-        predictorsBraking = [fitsData.a(idx,:); fitsData.v(idx,:); fitsData.d(idx,:)];
-        [fitsData.x(idx,[1:4]), fitsData.eRecon(idx,:) fitsData.fit(idx,:)] = fitBrakingSRM(e,atime,predictorsBraking);
-        
-        if fitDestabMG
-            % identify destabilizing response in MG in forward perturbations
-            predictorsDestabilizing = [fitsData.aPrime(idx,:); fitsData.vPrime(idx,:); fitsData.dPrime(idx,:)];
-            [fitsData.xPrime(idx,[5:8]), fitsData.ePrimeRecon(idx,:) fitsData.fitPrime(idx,:)] = fitDestabilizingSRM(e,atime,predictorsDestabilizing);
-            
-            % combine them into the initial guess for the final optimization
-            X0Total = [fitsData.x(idx,[1:4]) fitsData.xPrime(idx,[5:8])];
-            predictorsTotal = [predictorsBraking; predictorsDestabilizing];
-            
-            [fitsData.xTotal(idx,:), fitsData.eTotalRecon(idx,:) fitsData.fitTotal(idx,:)] = fitTotalSRM(e,atime,predictorsTotal,X0Total);
-            if removeBackLev
-                fitsData.eTotalRecon(idx,:) = fitsData.eTotalRecon(idx,:) + backLev;
-            end
-        end
-        if removeBackLev
-            fitsData.eRecon(idx,:) = fitsData.eRecon(idx,:) + backLev;
-        end
-    end
-end
-
-SRMFits = fitsData;
-
-end
-
-function out = names(in)
-out = string(in.Properties.VariableNames');
-end
-
-function out = makeDelayFigure(predictorsBraking,atime)
-
-aOrig = predictorsBraking(1,:);
-aDelayed = channelDelay(aOrig,0.1,atime);
-
-figure
-plot(atime, aOrig)
-hold on
-plot(atime, aDelayed)
-legend("original","delayed")
-
-end
-
-function out = loadOptimizationParameters()
-J_SE = 1;
-J_ME = 1;
-J_GM = 1;
-display = "iter";
-TolX = 1e-9;
-MaxFunEvals = 1e+5;
-TolFun = 1e-7;
-out = table(J_SE,J_ME,J_GM,display,TolX,MaxFunEvals,TolFun);
-end
-
-function out = assembleChannelComponents(signals,gains,delay,atime,THRESH)
-
-% note that we cannot just matrix multiply because we have to delay each signal
-out = [];
-if THRESH
-    for i = 1:length(gains)
-        out(i,:) = channelDelay(threshold(signals(i,:)*gains(i)),delay,atime);
-    end
-else
-    for i = 1:length(gains)
-        out(i,:) = channelDelay(signals(i,:)*gains(i),delay,atime);
-    end
-end
-end
-
-function out = assembleChannel(signals,gains,delay,atime)
-out = channelDelay(threshold(signals'*gains'),delay,atime);
-end
-
-function out = channelDelay(in,delay,atime)
-out = interp1(atime,in,atime-delay,'linear',0);
-end
-
-function out = threshold(in)
-out = max(in,0);
-end
-
-function [xBraking, eBraking, fitsBraking] = fitTraditionalSRM(e,atime,predictors,subjID,magnitude,direction) %mSRM
-% fit "braking response" at end of perturbation.
-
-% load optimization options. these include overall cost function options as
-% well as direct options for the Matlab optimizer.
-optimizationParameters = loadOptimizationParameters();
-
-options = optimoptions('fmincon',...
-    'display',optimizationParameters.display,...
-    'TolX',optimizationParameters.TolX,...
-    'TolFun',optimizationParameters.TolFun,...
-    'MaxFunEvals',optimizationParameters.MaxFunEvals...
-    );
-
-% 60-250 ms search range from welch 2008
-%Hand fit certain conditions
-if (strcmp(subjID,'HOA08') && magnitude == 10) | (strcmp(subjID,'HOA08') && magnitude == 7.5)
-    X0 = [10.0 0.01 0.01 0.100]; %[ka, kv, kd, lambda]
-    UB = [15.0 0.04 0.04 0.150];
-    LB = [ 0.0 0.00 0.00 0.060];
-else
-    X0 = [10.0 0.01 0.01 0.150]; %[10.0 0.01 0.01 0.100]; %[ka, kv, kd, lambda]
-    UB = [15.0 0.04 0.04 0.250]; %[15.0 0.04 0.04 0.150];
-    LB = [ 0.0 0.00 0.00 0.060];
-end
-%         error('Bounds were changed')
-% UB = [15.0 0.04 0.04 0.200];
-% UB = [15.0 0.04 0.04 0.175];
-% UB = [15.0 0.02 0.02 0.175];
-% LB = [ 0.0 0.00 0.00 0.050];
-% LB = [ 0.0 0.00 0.00 0.080];
-% LB = [ 0.0 0.00 0.00 0.100];
-gainFlag = [true true true false];
-
-fixBurstGain = true;
-if fixBurstGain & strcmp(subjID,'step08') & magnitude == 1 %alter search window for burst gain for certain participants
-    burstGain = max(e(1,atime>0.110&atime<0.140))/max(predictors(1,:));
-    [X0(1),UB(1)] = deal(max(min(burstGain,15),0));
-    LB(1) = 0.9 * X0(1);
-elseif fixBurstGain & strcmp(subjID,'step11') & magnitude == 2 %alter search window for burst gain for certain participants
-    burstGain = max(e(1,atime>0.150&atime<0.180))/max(predictors(1,:));
-    [X0(1),UB(1)] = deal(max(min(burstGain,15),0));
-    LB(1) = 0.9 * X0(1);
-elseif fixBurstGain & strcmp(subjID,'step17') %alter search window for burst gain for certain participants
-    burstGain = max(e(1,atime>0.150&atime<0.220))/max(predictors(1,:));
-    [X0(1),UB(1)] = deal(max(min(burstGain,15),0));
-    LB(1) = 0.9 * X0(1);
-elseif fixBurstGain & strcmp(subjID,'step19') %alter search window for burst gain for certain participants
-    burstGain = max(e(1,atime>0.100&atime<0.250))/max(predictors(1,:));
-    [X0(1),UB(1)] = deal(max(min(burstGain,15),0));
-    LB(1) = 0.9 * X0(1);
-elseif fixBurstGain & strcmp(subjID,'step21') %alter search window for burst gain for certain participants
-    burstGain = max(e(1,atime>0.120&atime<0.180))/max(predictors(1,:));
-    [X0(1),UB(1)] = deal(max(min(burstGain,15),0));
-    LB(1) = 0.9 * X0(1);
-else
-    burstGain = max(e(1,atime>0.150&atime<0.300))/max(predictors(1,:));
-    [X0(1),UB(1)] = deal(max(min(burstGain,15),0));
-    LB(1) = 0.9 * X0(1);
-end
-
-[X,FVAL,EXITFLAG] = fmincon(@(X) jigsawPassthrough(X,predictors,gainFlag,atime,e,optimizationParameters),X0,[],[],[],[],LB,UB,[],options);
-
-xBraking = X;
-
-eBraking = assembleChannel(predictors,X(gainFlag),X(~gainFlag),atime);
-fitParameters = modelIPI('X',X,'eRecon',eBraking,'e',e,'optimizationParameters',optimizationParameters,'gainWeight',double(gainFlag));
-
-fitsBraking(1) = fitParameters.r2;
-fitsBraking(2) = fitParameters.r2u;
-fitsBraking(isnan(fitsBraking)) = 0;
-
-end
-
-function PI = jigsawPassthrough(X,predictors,gainFlag,atime,e,optimizationParameters)
-
-% calculate reconstruction
-eRecon = assembleChannel(predictors,X(gainFlag),X(~gainFlag),atime);
-
-% calculate performance index
-fitParameters = modelIPI('X',X,'eRecon',eRecon,'e',e,'optimizationParameters',optimizationParameters,'gainWeight',double(gainFlag));
-
-PI = fitParameters.PI;
-
-end
-
-function fitParameters = modelIPI(varargin)
-
-p = inputParser;
-p.addOptional('X',[]);
-p.addOptional('e',[]);
-p.addOptional('eRecon',[]);
-p.addOptional('gainWeight',[]);
-p.addOptional('optimizationParameters',[]);
-p.parse(varargin{:});
-
-X = p.Results.X;
-e = p.Results.e;
-e_recon = p.Results.eRecon;
-optimizationParameters = p.Results.optimizationParameters;
-gainWeight = p.Results.gainWeight;
-
-J_SE = optimizationParameters.J_SE;
-J_ME = optimizationParameters.J_ME;
-J_GM = optimizationParameters.J_GM;
-
-fitParameters.r2 = rsqr(e',e_recon');
-fitParameters.r2u = rsqr_uncentered(e',e_recon');
-
-% Compute the errors between recorded and simulated EMG signals. We are
-% minimizing a function of these error values:
-% error   = recorded  - simulated
-e_error = e - e_recon;
-e_error(isnan(e_error)) = [];
-
-% ### J = squared error + "min-max error" = terminal cost
-% ### J = L1 + L2:
-% L1 = squared error. L1 composes the bulk of the terminal cost. It is a
-% linear combination of the squares of the error terms.
-fitParameters.L1 = J_SE*(e_error*e_error');
-
-% L2 = max of the abs of the error terms. L2 penalizes large deviations.
-% Little terminal cost is contributed by L2, but L2 appears to "smooth out"
-% the J manifold and make the optimization converge more consistently.
-fitParameters.L2 = J_ME*max(abs(e_error));
-
-% L3 = magnitude of the gain values. this term is just designed to zero out
-% noncontributing gains, and improve convergence.
-fitParameters.L3 = J_GM*(X.*gainWeight)*(X.*gainWeight)';
-
-% PI is the sum of these individual costs. The function fmincon attempts to
-% minimize J.
-fitParameters.PI = fitParameters.L1 + fitParameters.L2 + fitParameters.L3;
-
-end
-
-function [xBraking, eBraking, fitsBraking] = fitBrakingSRM(e,atime,predictors,subjID,magnitude,direction)
-% fit "braking response" at end of perturbation.
-
-% load optimization options. these include overall cost function options as
-% well as direct options for the Matlab optimizer.
-optimizationParameters = loadOptimizationParameters();
-
-options = optimoptions('fmincon',...
-    'display',optimizationParameters.display,...
-    'TolX',optimizationParameters.TolX,...
-    'TolFun',optimizationParameters.TolFun,...
-    'MaxFunEvals',optimizationParameters.MaxFunEvals...
-    );
-
-% 60-250 ms search range was welch 2008
-X0 = [10.0 0.01 0.01 0.150];
-UB = [15.0 0.04 0.04 0.250];
-% UB = [15.0 0.04 0.04 0.200];
-% UB = [15.0 0.04 0.04 0.175];
-% UB = [15.0 0.02 0.02 0.175];
-LB = [ 0.0 0.00 0.00 0.060];
-% LB = [ 0.0 0.00 0.00 0.050];
-% LB = [ 0.0 0.00 0.00 0.080];
-% LB = [ 0.0 0.00 0.00 0.100];
-gainFlag = [true true true false];
-
-fixBurstGain = true;
-if fixBurstGain
-    burstGain = max(e(1,atime>0.650&atime<0.800))/max(predictors(1,:));
-    [X0(1),UB(1)] = deal(max(min(burstGain,15),0));
-    LB(1) = 0.8 * X0(1);
-end
-
-[X,FVAL,EXITFLAG] = fmincon(@(X) jigsawPassthrough(X,predictors,gainFlag,atime,e,optimizationParameters),X0,[],[],[],[],LB,UB,[],options);
-
-xBraking = X;
-
-eBraking = assembleChannel(predictors,X(gainFlag),X(~gainFlag),atime);
-fitParameters = modelIPI('X',X,'eRecon',eBraking,'e',e,'optimizationParameters',optimizationParameters,'gainWeight',double(gainFlag));
-
-fitsBraking(1) = fitParameters.r2;
-fitsBraking(2) = fitParameters.r2u;
-
-fitsBraking(isnan(fitsBraking)) = 0;
-
-end
-
-function [xDestabilizing, eDestabilizing, fitsDestabilizing] = fitDestabilizingSRM(e,atime,predictors,subjID,magnitude,direction)
-% fit "Destabilizing response" at end of perturbation.
-
-% load optimization options. these include overall cost function options as
-% well as direct options for the Matlab optimizer.
-optimizationParameters = loadOptimizationParameters();
-
-options = optimoptions('fmincon',...
-    'display',optimizationParameters.display,...
-    'TolX',optimizationParameters.TolX,...
-    'TolFun',optimizationParameters.TolFun,...
-    'MaxFunEvals',optimizationParameters.MaxFunEvals...
-    );
-
-% note slightly different gain limits for destabilizing SRM TA gain
-if strcmp(subjID,'') & magnitude == 3
-    X0 = [10.0 0.01 0.01 0.110];
-    UB = [15.0 0.04 0.04 0.120];
-    LB = [ 0.0 0.00 0.00 0.090];
-else
-    X0 = [10.0 0.01 0.01 0.140];
-    UB = [15.0 0.04 0.04 0.210];
-    LB = [ 0.0 0.00 0.00 0.090];
-end
-% X0 = [10.0 0.01 0.01 0.150];
-% UB = [15.0 0.04 0.04 0.250];
-% UB = [15.0 0.04 0.04 0.200];
-% UB = [15.0 0.04 0.04 0.175];
-% UB = [15.0 0.02 0.02 0.175];
-% LB = [ 0.0 0.00 0.00 0.060];
-% LB = [ 0.0 0.00 0.00 0.050];
-% LB = [ 0.0 0.00 0.00 0.080];
-% LB = [ 0.0 0.00 0.00 0.100];
-gainFlag = [true true true false];
-
-fixBurstGain = true;
-if fixBurstGain
-    burstGain = max(e(1,atime>0.150&atime<0.275))/max(predictors(1,:));
-    % burstGain = max(e(1,atime>0.150&atime<0.300))/max(predictors(1,:));
-    [X0(1),UB(1)] = deal(max(min(burstGain,15),0));
-    LB(1) = 0.9 * X0(1);
-end
-
-[X,FVAL,EXITFLAG] = fmincon(@(X) jigsawPassthrough(X,predictors,gainFlag,atime,e,optimizationParameters),X0,[],[],[],[],LB,UB,[],options);
-
-xDestabilizing = X;
-
-eDestabilizing = assembleChannel(predictors,X(gainFlag),X(~gainFlag),atime);
-fitParameters = modelIPI('X',X,'eRecon',eDestabilizing,'e',e,'optimizationParameters',optimizationParameters,'gainWeight',double(gainFlag));
-
-fitsDestabilizing(1) = fitParameters.r2;
-fitsDestabilizing(2) = fitParameters.r2u;
-fitsDestabilizing(isnan(fitsDestabilizing)) = 0;
-
-end
-
-function [xTotal, eTotal,fitsTotal] = fitTotalSRM(e,atime,predictors,X0,subjID,magnitude,direction)
-
-% load optimization options. these include overall cost function options as
-% well as direct options for the Matlab optimizer.
-optimizationParameters = loadOptimizationParameters();
-
-options = optimoptions('fmincon',...
-    'display',optimizationParameters.display,...
-    'TolX',optimizationParameters.TolX,...
-    'TolFun',optimizationParameters.TolFun,...
-    'MaxFunEvals',optimizationParameters.MaxFunEvals...
-    );
-
-% allow the gains to vary within +/-20%, allow the delays to vary within +/- 20 msec. note that lower bound for gains must be positive.
-gainFlag = [true true true false true true true false];
-UB(gainFlag) = 1.1*X0(gainFlag);
-LB(gainFlag) = max(0.9*X0(gainFlag),0);
-[UB(~gainFlag),LB(~gainFlag)] = deal(X0(~gainFlag));
-
-% allow the final delays to vary within +/- 10sec
-[UB(~gainFlag),LB(~gainFlag)] = deal(X0(~gainFlag));
-UB(~gainFlag) = min(X0(~gainFlag)+0.010,0.250);
-LB(~gainFlag) = max(X0(~gainFlag)-0.010,0.060);
-
-% add a very small offset to improve convergence when LB and UB are very
-% close.
-UB((UB-LB)<1e-6) = UB((UB-LB)<1e-6)+1e-6;
-if (strcmp(subjID,"PD15") & magnitude == 10 & direction == 270)
-    % ka Destabilizing
-    UB(5) = 0; LB(5) = 0; X0(5) = 0;
-    % kv destabilizing
-    UB(6) = 0; LB(6) = 0; X0(6) = 0;
-    % kd destabilizing
-    UB(7) = 0; LB(7) = 0; X0(7) = 0;
-    % ka Braking
-    UB(1) = 1.9;
-elseif (strcmp(subjID,"HOA09") & magnitude == 10 & direction == 270)
-    % ka Destabilizing
-    UB(5) = 1.5; LB(5) = 0; X0(5) = 0.5;
-    % kv destabilizing
-    UB(6) = 1; LB(6) = 0.017; X0(6) = 0.02;
-    % kd destabilizing
-    UB(7) = 1; LB(7) = 0.03; %X0(7) = 0.036;
-end
-
-[X,FVAL,EXITFLAG] = fmincon(@(X) jigsawTwoChannelPassthrough(X,predictors,gainFlag,atime,e,optimizationParameters),X0,[],[],[],[],LB,UB,[],options);
-
-if (strcmp(subjID,"HOA09") & magnitude == 10 & direction == 270)
-    % ka Braking
-    X(1) = 0;
-    %kv Braking
-    X(2) = 0;
-    % lambda destabilizing
-    X(end) = 0.180;
-elseif (strcmp(subjID,"PD02") & magnitude == 10 & direction == 270)
-    % kd Destabilizing
-    X(7) = 0.005;
-    % lambda braking
-%     X(4) = 0.12;
-end
-xTotal = X;
-eTotal = assembleTwoChannels(predictors(1:3,:),X(1:3),X(4),predictors(4:6,:),X(5:7),X(8),atime);
-
-fitsTotal(1) = rsqr(e',eTotal');
-fitsTotal(2) = rsqr_uncentered(e',eTotal');
-
-end
-
-function [xBraking, eBraking, fitsBraking] = fitTraditionalSRM_eeg(e,atime,predictors)
-% fit "braking response" at end of perturbation.
-
-% load optimization options. these include overall cost function options as
-% well as direct options for the Matlab optimizer.
-optimizationParameters = loadOptimizationParameters();
-
-options = optimoptions('fmincon',...
-    'display',optimizationParameters.display,...
-    'TolX',optimizationParameters.TolX,...
-    'TolFun',optimizationParameters.TolFun,...
-    'MaxFunEvals',optimizationParameters.MaxFunEvals...
-    );
-
-%[ka, kv, kd, lambda]
-X0 = [10.0 0.01 0.01 0.050];
-UB = [15.0 0.04 0.04 0.100];
-% UB = [15.0 0.04 0.04 0.200];
-% UB = [15.0 0.04 0.04 0.175];
-% UB = [15.0 0.02 0.02 0.175];
-LB = [ 0.0 0.00 0.00 0.020];
-% LB = [ 0.0 0.00 0.00 0.050];
-% LB = [ 0.0 0.00 0.00 0.080];
-% LB = [ 0.0 0.00 0.00 0.100];
-gainFlag = [true true true false];
-
-fixBurstGain = true;
-if fixBurstGain
-    burstGain = max(e(1,atime>0.050&atime<0.300))/max(predictors(1,:));
-    [X0(1),UB(1)] = deal(max(min(burstGain,15),0));
-    LB(1) = 0.9 * X0(1);
-end
-
-[X,FVAL,EXITFLAG] = fmincon(@(X) jigsawPassthrough(X,predictors,gainFlag,atime,e,optimizationParameters),X0,[],[],[],[],LB,UB,[],options);
-
-xBraking = X;
-
-eBraking = assembleChannel(predictors,X(gainFlag),X(~gainFlag),atime);
-fitParameters = modelIPI('X',X,'eRecon',eBraking,'e',e,'optimizationParameters',optimizationParameters,'gainWeight',double(gainFlag));
-
-fitsBraking(1) = fitParameters.r2;
-fitsBraking(2) = fitParameters.r2u;
-fitsBraking(isnan(fitsBraking)) = 0;
-
-end %cSRM
-
-function [xBraking, eBraking, fitsBraking] = fitResidualSRM_eeg(e,atime,predictors,subjID,magnitude,LB, UB)
-% fit residuals using beta power.
-
-% load optimization options. these include overall cost function options as
-% well as direct options for the Matlab optimizer.
-optimizationParameters = loadOptimizationParameters();
-
-options = optimoptions('fmincon',...
-    'display',optimizationParameters.display,...
-    'TolX',optimizationParameters.TolX,...
-    'TolFun',optimizationParameters.TolFun,...
-    'MaxFunEvals',optimizationParameters.MaxFunEvals...
-    );
-
-%Initial guess is midpoint of lower and upper bounds (LB and UB, respectively)
-X0 = (UB-LB)/2; %[k_beta, lambda_beta]
-gainFlag = [true false];
-
-fixBurstGain = true;
-
-if fixBurstGain
-    burstGain = max(e(1,atime>0.150&atime<0.600))/max(predictors(1,:));
-    [X0(1),UB(1)] = deal(max(min(burstGain,15),0));
-    LB(1) = 0.9 * X0(1);
-end
-
-[X,FVAL,EXITFLAG] = fmincon(@(X) jigsawPassthrough(X,predictors,gainFlag,atime,e,optimizationParameters),X0,[],[],[],[],LB,UB,[],options);
-
-xBraking = X;
-
-eBraking = assembleChannel(predictors,X(gainFlag),X(~gainFlag),atime);
-fitParameters = modelIPI('X',X,'eRecon',eBraking,'e',e,'optimizationParameters',optimizationParameters,'gainWeight',double(gainFlag));
-
-fitsBraking(1) = fitParameters.r2;
-fitsBraking(2) = fitParameters.r2u;
-fitsBraking(isnan(fitsBraking)) = 0;
-
-end %Residual SRM (pre dSRM) w/ EEG
-
-function [xTotal, eTotal,fitsTotal] = fitTotalDualSRM_eeg(e,atime,predictors,X0,subjID,magnitude,type)
-% load optimization options. these include overall cost function options as
-% well as direct options for the Matlab optimizer.
-optimizationParameters = loadOptimizationParameters();
-
-options = optimoptions('fmincon',...
-    'display',optimizationParameters.display,...
-    'TolX',optimizationParameters.TolX,...
-    'TolFun',optimizationParameters.TolFun,...
-    'MaxFunEvals',optimizationParameters.MaxFunEvals...
-    );
-
-% allow the gains to vary within +/-XX%, allow the delays to vary within +/- 20 msec. note that lower bound for gains must be positive.
-gainFlag = [true true true false true false];
-% UB(gainFlag) = 1.5*X0(gainFlag);
-UB(gainFlag) = [1.1,1.5,1.5,1.5].*X0(gainFlag); % first vector are the weights to allow for wiggle room on bounds for gains. - Keep 1.1 the same for ka
-% LB(gainFlag) = max(0.9*X0(gainFlag),0);
-% LB(gainFlag) = max(0.3*X0(gainFlag),0);
-LB(gainFlag) = [0.9,0,0,0].*X0(gainFlag); % first vector are the weights to allow for wiggle room on bounds for gains. - keep 0.9 the same for ka
-[UB(~gainFlag),LB(~gainFlag)] = deal(X0(~gainFlag));
-
-% allow the final delays to vary within +/- 10sec
-[UB(~gainFlag),LB(~gainFlag)] = deal(X0(~gainFlag));
-UB(~gainFlag) = min(X0(~gainFlag)+0.010,0.250);
-LB(~gainFlag) = max(X0(~gainFlag)-0.010,0.060);
-% if (strcmp(subjID,'step02') & magnitude == 2) | (strcmp(subjID,'step02') & magnitude == 3)
-%     X0(4) = 0.100; %manually set brainstem CoM delay
-% end
-if strcmp(subjID,'step05') & magnitude == 2 & strcmp(type,'beta')
-    X0(end) = 0.2; %manually set EEG delay initial guess to try to improve fit
-    X0(5) = 0.01; LB(5) = 0;
-elseif strcmp(subjID,'step09') & magnitude == 3 & strcmp(type,'beta')
-    X0(end) = 0.27; %manually set EEG delay initial guess to try to improve fit
-    X0(5) = 0.3; %manually set k_beta initial guess to try to improve fit
-    % elseif strcmp(subjID,'step11') & magnitude == 2 & strcmp(type,'Cz')
-    %     X0(end) = 0.220; LB(end) = 0.150; UB(end) = 0.400;
-    %     LB(5) = 0.10;
-end
-
-% add a very small offset to improve convergence when LB and UB are very
-% close.
-UB((UB-LB)<1e-6) = UB((UB-LB)<1e-6)+1e-6;
-
-[X,FVAL,EXITFLAG] = fmincon(@(X) jigsawTwoChannelPassthrough(X,predictors,gainFlag,atime,e,optimizationParameters),X0,[],[],[],[],LB,UB,[],options);
-
-xTotal = X;
-% eTotal = assembleTwoChannels(predictors(1:3,:),X(1:3),X(4),predictors(4:6,:),X(5:7),X(8),atime);
-eTotal = assembleTwoChannels(predictors(1:3,:),X(1:3),X(4),predictors(4,:),X(5),X(6),atime);
-
-fitsTotal(1) = rsqr(e',eTotal');
-fitsTotal(2) = rsqr_uncentered(e',eTotal');
-
-end %dSRM for EEG predictors
-
-function [xBraking, eBraking, fitsBraking] = fitTraditionalSRM_DualSRM(e,atime,predictors,subjID,magnitude)
-%Fit EMG w/ CoM Kinematics and Beta simultaneously
-
-% load optimization options. these include overall cost function options as
-% well as direct options for the Matlab optimizer.
-optimizationParameters = loadOptimizationParameters();
-
-options = optimoptions('fmincon',...
-    'display',optimizationParameters.display,...
-    'TolX',optimizationParameters.TolX,...
-    'TolFun',optimizationParameters.TolFun,...
-    'MaxFunEvals',optimizationParameters.MaxFunEvals...
-    );
-
-% 60-250 ms search range from welch 2008
-
-%Hand fit certain conditions (Identical to fitTraditionalSRM that only fits
-%w/ CoM kinematics
-%Hand fit certain conditions
-if (strcmp(subjID,'step01') & magnitude == 1) | (strcmp(subjID,'step01') & magnitude == 3)
-    X0 = [10.0 0.01 0.01 0.100]; %[ka, kv, kd, lambda]
-    UB = [15.0 0.04 0.04 0.150];
-    LB = [ 0.0 0.00 0.00 0.060];
-elseif strcmp(subjID,'step04') & magnitude == 1
-    X0 = [10.0 0.01 0.01 0.100]; %[ka, kv, kd, lambda]
-    UB = [15.0 0.04 0.04 0.150];
-    LB = [ 0.0 0.00 0.00 0.060];
-elseif strcmp(subjID,'step05') & magnitude == 3
-    X0 = [10.0 0.01 0.01 0.100]; %[ka, kv, kd, lambda]
-    UB = [15.0 0.04 0.04 0.150];
-    LB = [ 0.0 0.00 0.00 0.060];
-elseif strcmp(subjID,'step06') & magnitude == 1
-    X0 = [10.0 0.01 0.01 0.100]; %[ka, kv, kd, lambda]
-    UB = [15.0 0.04 0.04 0.150];
-    LB = [ 0.0 0.00 0.00 0.060];
-elseif strcmp(subjID,'step07') & magnitude == 3
-    X0 = [10.0 0.01 0.01 0.100]; %[ka, kv, kd, lambda]
-    UB = [15.0 0.04 0.04 0.150];
-    LB = [ 0.0 0.00 0.00 0.060];
-elseif (strcmp(subjID,'step08') & magnitude == 1) | (strcmp(subjID,'step08') & magnitude == 2)
-    X0 = [10.0 0.01 0.01 0.100]; %[ka, kv, kd, lambda]
-    UB = [15.0 0.04 0.04 0.150];
-    LB = [ 0.0 0.00 0.00 0.060];
-elseif (strcmp(subjID,'step10') & magnitude == 2)
-    X0 = [10.0 0.01 0.01 0.100]; %[ka, kv, kd, lambda]
-    UB = [15.0 0.04 0.04 0.150];
-    LB = [ 0.0 0.00 0.00 0.060];
-elseif strcmp(subjID,'step11')
-    X0 = [10.0 0.01 0.01 0.100]; %[ka, kv, kd, lambda]
-    UB = [15.0 0.04 0.04 0.150];
-    LB = [ 0.0 0.00 0.00 0.060];
-elseif strcmp(subjID,'step12') & magnitude == 2
-    X0 = [10.0 0.01 0.01 0.100]; %[ka, kv, kd, lambda]
-    UB = [15.0 0.04 0.04 0.150];
-    LB = [ 0.0 0.00 0.00 0.060];
-elseif strcmp(subjID,'step15') & magnitude == 3
-    X0 = [10.0 0.01 0.01 0.100]; %[ka, kv, kd, lambda]
-    UB = [15.0 0.04 0.04 0.150];
-    LB = [ 0.0 0.00 0.00 0.060];
-elseif strcmp(subjID,'step17') & magnitude == 2
-    X0 = [10.0 0.01 0.01 0.100]; %[ka, kv, kd, lambda]
-    UB = [15.0 0.04 0.04 0.150];
-    LB = [ 0.0 0.00 0.00 0.060];
-elseif strcmp(subjID,'step18') & magnitude == 3
-    X0 = [10.0 0.01 0.01 0.100]; %[ka, kv, kd, lambda]
-    UB = [15.0 0.04 0.04 0.150];
-    LB = [ 0.0 0.00 0.00 0.060];
-elseif strcmp(subjID,'step19')
-    X0 = [10.0 0.01 0.01 0.100]; %[ka, kv, kd, lambda]
-    UB = [15.0 0.04 0.04 0.150];
-    LB = [ 0.0 0.00 0.00 0.060];
-elseif strcmp(subjID,'step20') & magnitude == 3
-    X0 = [10.0 0.01 0.01 0.100]; %[ka, kv, kd, lambda]
-    UB = [15.0 0.04 0.04 0.150];
-    LB = [ 0.0 0.00 0.00 0.060];
-elseif strcmp(subjID,'step21')
-    X0 = [10.0 0.01 0.01 0.100]; %[ka, kv, kd, lambda]
-    UB = [15.0 0.04 0.04 0.150];
-    LB = [ 0.0 0.00 0.00 0.060];
-else
-    X0 = [10.0 0.01 0.01 0.150]; %[10.0 0.01 0.01 0.100]; %[ka, kv, kd, lambda]
-    UB = [15.0 0.04 0.04 0.250]; %[15.0 0.04 0.04 0.150];
-    LB = [ 0.0 0.00 0.00 0.060];
-end
-%         error('Bounds were changed')
-% UB = [15.0 0.04 0.04 0.200];
-% UB = [15.0 0.04 0.04 0.175];
-% UB = [15.0 0.02 0.02 0.175];
-% LB = [ 0.0 0.00 0.00 0.050];
-% LB = [ 0.0 0.00 0.00 0.080];
-% LB = [ 0.0 0.00 0.00 0.100];
-gainFlag = [true true true false true false];
-% add in k_beta and lambda_beta to UB, LB, and X0
-X0(5:6) = [1 UB(4)+0.050];
-LB(5:6) = [0 UB(4)+0.010];
-UB(5:6) = [15 0.400];
-
-fixBurstGain = true;
-if fixBurstGain & strcmp(subjID,'step08') & magnitude == 1 %Narrow search window for burst gain for certain participants
-    burstGain = max(e(1,atime>0.100&atime<0.180))/max(predictors(1,:));
-    [X0(1),UB(1)] = deal(max(min(burstGain,15),0));
-    LB(1) = 0.9 * X0(1);
-elseif fixBurstGain & strcmp(subjID,'step11') & magnitude == 2 %Narrow search window for burst gain for certain participants
-    burstGain = max(e(1,atime>0.150&atime<0.180))/max(predictors(1,:));
-    [X0(1),UB(1)] = deal(max(min(burstGain,15),0));
-    LB(1) = 0.9 * X0(1);
-elseif fixBurstGain & strcmp(subjID,'step17') %Narrow search window for burst gain for certain participants
-    burstGain = max(e(1,atime>0.150&atime<0.250))/max(predictors(1,:));
-    [X0(1),UB(1)] = deal(max(min(burstGain,15),0));
-    LB(1) = 0.9 * X0(1);
-elseif fixBurstGain & strcmp(subjID,'step19') %Narrow search window for burst gain for certain participants
-    burstGain = max(e(1,atime>0.100&atime<0.250))/max(predictors(1,:));
-    [X0(1),UB(1)] = deal(max(min(burstGain,15),0));
-    LB(1) = 0.9 * X0(1);
-elseif fixBurstGain & strcmp(subjID,'step21') %Narrow search window for burst gain for certain participants
-    burstGain = max(e(1,atime>0.120&atime<0.180))/max(predictors(1,:));
-    [X0(1),UB(1)] = deal(max(min(burstGain,15),0));
-    LB(1) = 0.9 * X0(1);
-else
-    burstGain = max(e(1,atime>0.150&atime<0.300))/max(predictors(1,:));
-    [X0(1),UB(1)] = deal(max(min(burstGain,15),0));
-    LB(1) = 0.9 * X0(1);
-end
-% set constraints to force lambda_beta > lambda_EMG + 10ms
-% A*x <= b; A is an M-by-N matrix, where M is the number of inequalities, and N is the number of variables (number of elements in x0).
-A = [0 0 0 1 0 -1];
-b = [-0.010];
-
-[X,FVAL,EXITFLAG] = fmincon(@(X) jigsawTwoChannelPassthrough(X,predictors,gainFlag,atime,e,optimizationParameters),...
-    X0,A,b,[],[],LB,UB,[],options);
-
-xBraking = X;
-
-eBraking = assembleTwoChannels(predictors(1:3,:),X(1:3),X(4),predictors(4,:),X(5),X(6),atime);
-fitParameters = modelIPI('X',X,'eRecon',eBraking,'e',e,'optimizationParameters',optimizationParameters,'gainWeight',double(gainFlag));
-
-fitsBraking(1) = fitParameters.r2;
-fitsBraking(2) = fitParameters.r2u;
-fitsBraking(isnan(fitsBraking)) = 0;
-
-end %dSRM - Not used (fits EMG w/ CoM and EEG simultaneously (no jiggling)
-
-function [xBraking, eBraking, fitsBraking] = fitResidualSRM_CoM(e,atime,predictors,subjID,magnitude,LB,UB)
-% fit residuals using beta power.
-
-% load optimization options. these include overall cost function options as
-% well as direct options for the Matlab optimizer.
-optimizationParameters = loadOptimizationParameters();
-
-options = optimoptions('fmincon',...
-    'display',optimizationParameters.display,...
-    'TolX',optimizationParameters.TolX,...
-    'TolFun',optimizationParameters.TolFun,...
-    'MaxFunEvals',optimizationParameters.MaxFunEvals...
-    );
-
-%Initial guess is midpoint of lower and upper bounds (LB and UB, respectively)
-X0 = (UB-LB)/2; 
-gainFlag = [true true true false];
-
-if (strcmp(subjID,'HOA19') & magnitude == 7.5)
-    X0(end) = 0.200; %manually set ctx CoM delay
-    UB(end) = 0.250;
-end
-
-fixBurstGain = true;
-
-if fixBurstGain
-    burstGain = max(e(1,atime>0.150&atime<0.600))/max(predictors(1,:));
-    [X0(1),UB(1)] = deal(max(min(burstGain,15),0));
-    LB(1) = 0.9 * X0(1);
-end
-
-[X,FVAL,EXITFLAG] = fmincon(@(X) jigsawPassthrough(X,predictors,gainFlag,atime,e,optimizationParameters),X0,[],[],[],[],LB,UB,[],options);
-
-xBraking = X;
-
-eBraking = assembleChannel(predictors,X(gainFlag),X(~gainFlag),atime);
-fitParameters = modelIPI('X',X,'eRecon',eBraking,'e',e,'optimizationParameters',optimizationParameters,'gainWeight',double(gainFlag));
-
-fitsBraking(1) = fitParameters.r2;
-fitsBraking(2) = fitParameters.r2u;
-fitsBraking(isnan(fitsBraking)) = 0;
-
-end % fit residusls w/ coM
-
-function [xTotal, eTotal,fitsTotal] = fitTotalDualSRM_CoM(e,atime,predictors,X0,subjID,magnitude)
-
-% load optimization options. these include overall cost function options as
-% well as direct options for the Matlab optimizer.
-optimizationParameters = loadOptimizationParameters();
-
-options = optimoptions('fmincon',...
-    'display',optimizationParameters.display,...
-    'TolX',optimizationParameters.TolX,...
-    'TolFun',optimizationParameters.TolFun,...
-    'MaxFunEvals',optimizationParameters.MaxFunEvals...
-    );
-
-% allow the gains to vary within +/-XX%, allow the delays to vary within +/- 20 msec. note that lower bound for gains must be positive.
-gainFlag = [true true true false true true true false];
-% UB(gainFlag) = 1.5*X0(gainFlag);
-UB(gainFlag) = [1.1, 1.5, 1.5,   1.1, 1.5, 1.5].*X0(gainFlag); % first vector are the weights to allow for wiggle room on bounds for gains. - Keep 1.1 the same for kas
-% LB(gainFlag) = max(0.9*X0(gainFlag),0);
-% LB(gainFlag) = max(0.3*X0(gainFlag),0);
-LB(gainFlag) = [0.9, 0, 0,    0.9, 0.0, 0.0].*X0(gainFlag); % first vector are the weights to allow for wiggle room on bounds for gains. - keep 0.9 the same for ka to force fit with burst
-[UB(~gainFlag),LB(~gainFlag)] = deal(X0(~gainFlag));
-
-% allow the final delays to vary within +/- 10sec
-[UB(~gainFlag),LB(~gainFlag)] = deal(X0(~gainFlag));
-UB(~gainFlag) = min(X0(~gainFlag)+0.010,0.250);
-LB(~gainFlag) = max(X0(~gainFlag)-0.010,0.060);
-
-% try to hand fit participants
-if (strcmp(subjID,'HOA19') & magnitude == 7.5)
-    %lambda2
-    UB(end) = 0.250; X0(end) = 0.200;
-    %ka1
-    UB(1) = 4.9; LB(1) = 4.7; X0(1) = 4.8;
-    %ka2
-    UB(5) = 3.5; LB(5) = 2.4; X0(5) = 2.7;
-end
-
-% add a very small offset to improve convergence when LB and UB are very
-% close.
-UB((UB-LB)<1e-6) = UB((UB-LB)<1e-6)+1e-6;
-
-[X,FVAL,EXITFLAG] = fmincon(@(X) jigsawTwoChannelPassthrough(X,predictors,gainFlag,atime,e,optimizationParameters),X0,[],[],[],[],LB,UB,[],options);
-
-xTotal = X;
-eTotal = assembleTwoChannels(predictors(1:3,:),X(1:3),X(4),predictors(4:6,:),X(5:7),X(8),atime);
-
-fitsTotal(1) = rsqr(e',eTotal');
-fitsTotal(2) = rsqr_uncentered(e',eTotal');
-
-end %dSRM for CoM Predictors
