@@ -382,7 +382,7 @@ for i = 1:height(dataAv)
     ctx_comp_ag_AUC(i,:) = trapz(atime(ind_time), tmp_ctx_comp_ag);
     subctx_comp_ag_AUC(i,:) = trapz(atime(ind_time), tmp_subctx_comp_ag);
     
-    %% calculate subctx and ctx components for Antagonist hSRM
+    %% calculate destabilizing and braking components for Antagonist SRM
     predictors_antag = [a_antag(ind_time); v_antag(ind_time); d_antag(ind_time);....
         -a_antag(ind_time); -v_antag(ind_time); -d_antag(ind_time)]; % Antagonist SRM predictors
     Gains_antag = dataAv.Gains_Antag(i,:); %Antagonist SRM reconstruction gains
