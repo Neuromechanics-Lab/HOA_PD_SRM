@@ -66,6 +66,7 @@ for i = 1:length(participants) %participant loop
     title('Pert Disp'); ylabel('cm'); xlabel('time (s)')
     legend('90 - 5','90 - 7.5','90 - 10','270 - 5','270 - 7.5', '270 - 10')
     
+    set(gcf,'WindowState','maximized','renderer','painters')
     if p.Results.savefigopt
         print(gcf,'-depsc2',[p.Results.figdir + participant + "_Methods_Fig.eps"]) 
     end
