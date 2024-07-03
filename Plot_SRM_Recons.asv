@@ -13,7 +13,7 @@ addpath('D:\Users\SBOEBIN\Documents\MATLAB\matlabUtilities-master')
 
 %% plot data
 % plot list - mSRM/hSRM comparisons (1 per direction & mag), Recon vs Data
-% comparison (1 per direction & mag), SRM components, (1 per direction & mag)
+% comparison (1 per direction), SRM components, (1 per direction
 participants = unique(dataAv.patient);
 direcs = unique(dataAv.pertdir_calc_round_deg);
 try
@@ -138,9 +138,9 @@ for i = 1:length(participants) %participant loop
             set(ax_all,'YLim',yl); set(ax_all,'XLim',xl)
             
             if p.Results.savefigopt
-                saveas(mSRM_hSRM_fig,[p.Results.figdir + participant + '_DualSRMCompare_mag' + num2str(mag) + '_direc' + num2str(direc) + '_' + p.Results.AnalysisType + date + '.fig'],'fig')
-                saveas(mSRM_hSRM_fig,[p.Results.figdir + participant + '_DualSRMCompare_mag' + num2str(mag) + '_direc' + num2str(direc) + '_' + p.Results.AnalysisType + date + '.jpg'],'jpg')
-                print(mSRM_hSRM_fig,'-depsc2',[p.Results.figdir + participant + '_DualSRMCompare_mag' + num2str(mag) + '_direc' + num2str(direc) + '_' + p.Results.AnalysisType + date + '.eps'])
+                saveas(gcf,[p.Results.figdir + participant + '_DualSRMCompare_mag' + num2str(mag) + '_direc' + num2str(direc) + '_' + p.Results.AnalysisType + date + '.fig'],'fig')
+                saveas(gcf,[p.Results.figdir + participant + '_DualSRMCompare_mag' + num2str(mag) + '_direc' + num2str(direc) + '_' + p.Results.AnalysisType + date + '.jpg'],'jpg')
+                print(gcf,'-depsc2',[p.Results.figdir + participant + '_DualSRMCompare_mag' + num2str(mag) + '_direc' + num2str(direc) + '_' + p.Results.AnalysisType + date + '.eps'])
             end
             
             
@@ -207,14 +207,14 @@ for i = 1:length(participants) %participant loop
             xlim([-0.2 1.4]); ylim([-1 1])
             
             if p.Results.savefigopt
-                saveas(hSRM_comps_fig,[p.Results.figdir + participant + '_hSRM_CoM_Comps_mag' + num2str(mag) + '_direc' + num2str(direc) + '_' + p.Results.AnalysisType + date + '.fig'],'fig')
-                saveas(hSRM_comps_fig,[p.Results.figdir + participant + '_hSRM_CoM_Comps_mag' + num2str(mag) + '_direc' + num2str(direc) + '_' + p.Results.AnalysisType + date +  '.jpg'],'jpg')
-                print(hSRM_comps_fig,'-depsc2',[p.Results.figdir + participant + '_hSRM_CoM_Comps_mag' + num2str(mag) + '_direc' + num2str(direc) + '_' + p.Results.AnalysisType + date +  '.eps'])
+                saveas(gcf,[p.Results.figdir + participant + '_hSRM_CoM_Comps_mag' + num2str(mag) + '_direc' + num2str(direc) + '_' + p.Results.AnalysisType + date + '.fig'],'fig')
+                saveas(gcf,[p.Results.figdir + participant + '_hSRM_CoM_Comps_mag' + num2str(mag) + '_direc' + num2str(direc) + '_' + p.Results.AnalysisType + date +  '.jpg'],'jpg')
+                print(gcf,'-depsc2',[p.Results.figdir + participant + '_hSRM_CoM_Comps_mag' + num2str(mag) + '_direc' + num2str(direc) + '_' + p.Results.AnalysisType + date +  '.eps'])
             end
             
             %% plot Components for Antagonist SRM
             backLev_antagonist = mean(antagonist(atime < -0.1),'omitnan');
-            antagSRM_comps_fig = figure; hold on; set(antagSRM_comps_fig,'WindowState','maximized');
+            figure; hold on; set(gcf,'WindowState','maximized');
             plot(atime,antagonist,'Color', [0.5 0.5 0.5],'LineWidth',2)
             plot(atime(ind_time),dataAv.Recon_Antagonist(ind_cond,:),...
                 'k','LineWidth',2)
@@ -234,10 +234,10 @@ for i = 1:length(participants) %participant loop
                 -a_antag(ind_time)*dataAv.Gains_Antag(ind_cond,5)+backLev_antagonist,...
                 'r-','LineWidth',1)
             plot(atime(ind_time)+dataAv.Gains_Antag(ind_cond,8),...
-                -v_antag(ind_time)*dataAv.Gains_Antag(ind_cond,6)+backLev_antagonist,...
+                v_antag(ind_time)*dataAv.Gains_Antag(ind_cond,6)+backLev_antagonist,...
                 'r.-','LineWidth',1)
             plot(atime(ind_time)+dataAv.Gains_Antag(ind_cond,8),...
-                -d_antag(ind_time)*dataAv.Gains_Antag(ind_cond,7)+backLev_antagonist,...
+                d_antag(ind_time)*dataAv.Gains_Antag(ind_cond,7)+backLev_antagonist,...
                 'r--','LineWidth',1)
             
             title_string = {[participant + ' Mag' + num2str(mag) + " direc" + num2str(direc) + ' AntagSRM']...
@@ -253,9 +253,9 @@ for i = 1:length(participants) %participant loop
             xlim([-0.2 1.4]); ylim([-1 1])
            
             if p.Results.savefigopt
-                saveas(antagSRM_comps_fig,[p.Results.figdir + participant + '_AntagSRM_Comps_mag' + num2str(mag) + '_direc' + num2str(direc) + '_' + p.Results.AnalysisType + date + '.fig'],'fig')
-                saveas(antagSRM_comps_fig,[p.Results.figdir + participant + '_AntagSRM_Comps_mag' + num2str(mag) + '_direc' + num2str(direc) + '_' + p.Results.AnalysisType + date +  '.jpg'],'jpg')
-                print(antagSRM_comps_fig,'-depsc2',[p.Results.figdir + participant + '_AntagSRM_Comps_mag' + num2str(mag) + '_direc' + num2str(direc) + '_' + p.Results.AnalysisType + date +  '.eps'])
+                saveas(gcf,[p.Results.figdir + participant + '_AntagSRM_Comps_mag' + num2str(mag) + '_direc' + num2str(direc) + '_' + p.Results.AnalysisType + date + '.fig'],'fig')
+                saveas(gcf,[p.Results.figdir + participant + '_AntagSRM_Comps_mag' + num2str(mag) + '_direc' + num2str(direc) + '_' + p.Results.AnalysisType + date +  '.jpg'],'jpg')
+                print(gcf,'-depsc2',[p.Results.figdir + participant + '_AntagSRM_Comps_mag' + num2str(mag) + '_direc' + num2str(direc) + '_' + p.Results.AnalysisType + date +  '.eps'])
             end
             
         end %mag loop
