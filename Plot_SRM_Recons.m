@@ -3,7 +3,7 @@ function Plot_SRM_Recons(dataAv, varargin)
 p = inputParser;
 addOptional(p,'savefigopt',true); % option to save figures
 addOptional(p,'closeopt',true); %option to close all figures after the participant loop
-addOptional(p,'AnalysisType',''); % additional descriptor to be added to file name
+addOptional(p,'AnalysisType',''); % additional descriptor to be added to file name (end with an _ please)
 addOptional(p,'figdir','\\eu.emory.edu\bme\labs\ting\shared_ting\Scott\HOA_PD SRM\savedfigs\') % where to save the data
 p.KeepUnmatched = true;
 parse(p,varargin{:});
