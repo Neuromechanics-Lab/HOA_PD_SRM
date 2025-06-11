@@ -11,7 +11,7 @@ addpath('C:\Users\seboe\OneDrive - Emory University\Documents\Grad School\Neurom
 % load('D:\Users\SBOEBIN\Documents\MATLAB\Post creatfitsData Output\HOA_PD_DataTables_interp_norm_06-Dec-2023.mat') %output measures Table (EEG, EMG, etc.)
 load('D:\Users\SBOEBIN\Documents\MATLAB\Post creatfitsData Output\HOA_PD_DataTables_04-Oct-2023.mat') % output measures, no EEG
 % dataAv.Cz = double(dataAv.Cz); %convert Cz(t) to class double for SRM recon
-savedir = 'X:\ting\shared_ting\Scott\HOA_PD SRM\';
+savedir = '\\cosmic.bme.emory.edu\labs\ting\shared_ting\Scott\HOA_PD SRM\';
 
 %% remove participant/magnitude/direction pairs that will not be reconstructed 
 dataAv(strcmp(dataAv.patient,"PD07"),:) = []; % PD07 excluded due to brain tumor
@@ -30,13 +30,11 @@ direcs = unique(dataAv.pertdir_calc_round_deg); % directions to be analyzed (90 
 % direcs = 270;
 mags = unique(dataAv.condition);
 % mags = mags(1);
-%Group marker ("HOA" or "PD" -- string)
-% groups = unique(dataAv.group); 
-%Unique subject code (i.e. "HOA02" -- string)
-% participants = unique(dataAv.patient); 
-participants = ["HOA02"; "HOA04"; "HOA08"; "HOA13"; "HOA19";...
-    "PD03"; "PD11"; "PD12"; "PD13"; "PD15"; "PD17"; "PD20"]; % fit specific participants only
-
+% groups = unique(dataAv.group); %Group marker ("HOA" or "PD" -- string)
+participants = unique(dataAv.patient); %Unique subject code (i.e. "HOA02" -- string)
+% participants = ["HOA02"; "HOA04"; "HOA08"; "HOA13"; "HOA19";...
+%     "PD03"; "PD11"; "PD12"; "PD13"; "PD15"; "PD17"; "PD20"]; % fit specific participants only
+% participants = "PD05";
 dataAv = dataAv(ismember(dataAv.patient, participants),:); % eliminate rows of dataAv if they are not part of "participants"
 % analysisType = ''; % to modify save name with unique identifier
 analysisType = ''; % to modify save name with unique identifier
@@ -137,15 +135,7 @@ end
 
 dataAv = [dataAv temp_Table];
 % clear dummy variables from above
-clear Residual Gains_Ag  Gains_Antag  Gains_Beta  Gains_Cz  Recon_Beta  Recon_Cz...
-    Recon_Agonist Recon_Antagonist  fit_beta  fit_Cz  fit_agonist  fit_antagonist...
-    Gains_Ag_Dual_beta  Gains_Ag_TotalDual_beta Recon_Agonist_Dual_beta ...
-    Recon_Agonist_TotalDual_beta  fit_agonist_Dual_beta  fit_agonist_TotalDual_beta...
-    Gains_Residual_beta  Recon_Residual_beta  fit_residual_beta...
-    Gains_Ag_TotalDual_Cz Recon_Agonist_TotalDual_Cz  fit_agonist_TotalDual_Cz...
-    Gains_Residual_Cz  Recon_Residual_Cz  fit_residual_Cz Gains_Ag_TotalDual_CoM...
-    Recon_Agonist_TotalDual_CoM  fit_agonist_TotalDual_CoM Gains_Residual_CoM...
-    Recon_Residual_CoM  fit_residual_CoM
+clear Residual Gains_Ag  Gains_Antag  Gains_Beta  Gains_Cz  Recon_Beta  Recon_Cz  Recon_Agonist Recon_Antagonist  fit_beta  fit_Cz  fit_agonist  fit_antagonist  Gains_Ag_Dual_beta  Gains_Ag_TotalDual_beta Recon_Agonist_Dual_beta  Recon_Agonist_TotalDual_beta  fit_agonist_Dual_beta  fit_agonist_TotalDual_beta Gains_Residual_beta  Recon_Residual_beta  fit_residual_beta  Gains_Ag_TotalDual_Cz Recon_Agonist_TotalDual_Cz  fit_agonist_TotalDual_Cz Gains_Residual_Cz  Recon_Residual_Cz  fit_residual_Cz Gains_Ag_TotalDual_CoM Recon_Agonist_TotalDual_CoM  fit_agonist_TotalDual_CoM Gains_Residual_CoM  Recon_Residual_CoM  fit_residual_CoM
 %% Run SRM
 loopbreak = false;
 for Participant = participants' % iterate across each participant
@@ -352,9 +342,7 @@ for Participant = participants' % iterate across each participant
             %% Fit dual SRM (fit EMG w/ double CoM Feedback)
             X0Dual = [x_ag(1:4) x_residual_CoM(1:4)];
             predictorsDual_CoM = [predictorsmSRM; predictorsmSRM];
-            [xTotal_ag_dual_CoM, eTotalRecon_ag_dual_CoM, fitTotal_ag_dual_CoM] = fitTotalDualSRM_CoM(...
-                agonist(ind_time), atime(ind_time), predictorsDual_CoM,...
-                X0Dual, subjID, mag, direction);
+            [xTotal_ag_dual_CoM, eTotalRecon_ag_dual_CoM, fitTotal_ag_dual_CoM] = fitTotalDualSRM_CoM(agonist(ind_time), atime(ind_time), predictorsDual_CoM, X0Dual, subjID, mag, direction);
             if removeBackLev
                 eTotalRecon_ag_dual_CoM = eTotalRecon_ag_dual_CoM + backLev_agonist;
             end

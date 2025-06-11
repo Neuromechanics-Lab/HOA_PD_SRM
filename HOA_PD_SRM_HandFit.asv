@@ -16,11 +16,11 @@ function [output] = HOA_PD_SRM_HandFit(dataAv, participant, direction, mag, Reco
 % new SRM reconstruction based on NewGains specified by the user
 
 % Example Command Window Call Sequence: 
-% subj = "HOA07"; direc = 270; mag = 10; ReconName = "Recon_Agonist_TotalDual_CoM"; % specify which participant/condition you want
+%subj = "HOA07"; direc = 270; mag = 10; ReconName = "Recon_Agonist_TotalDual_CoM"; % specify which participant/condition you want
 % ind = find(strcmp(dataAv.patient,subj) & dataAv.pertdir_calc_round_deg == direc & dataAv.condition == mag) % Find Index for New Gains
 % NewGains = dataAv.Gains_Antag(ind,:); % set New Gains to be last SRM Fit
 % output = HOA_PD_SRM_HandFit(dataAv, subj, direc, mag, ReconName, NewGains); % run HandFit (run this line after changing NewGains manually)
-% save("X:\ting\shared_ting\Scott\HOA_PD SRM\HOA_PD_SRM_HandFit_Outputs\" + subj + "_" + num2str(direc) + "_" + num2str(mag) + "_" + ReconName + ".mat","output","-v7.3"); % save
+% save("\\cosmic.bme.emory.edu\labs\ting\shared_ting\Scott\HOA_PD SRM\HOA_PD_SRM_HandFit_Outputs\" + subj + "_" + num2str(direc) + "_" + num2str(mag) + "_" + ReconName + ".mat","output","-v7.3"); % save
 
 %% Add Utilities folders - May give warnings depending on which PC you are using
 addpath('D:\Users\SBOEBIN\Documents\MATLAB\SRMUtilities')
