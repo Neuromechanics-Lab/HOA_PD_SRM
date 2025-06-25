@@ -2,7 +2,7 @@
 clear; close all;
 
 fdir = "X:\ting\shared_ting\Scott\HOA_PD SRM\"; % File directory
-dataName = "HOA_PD_SRM_Outputs__24-Apr-2024_wAnalysis.mat"; % only acceleration Feedback
+dataName = "HOA_PD_SRM_Outputs_LR_Averaged_02-May-2024.mat";
 
 load(fdir + dataName)
 max_time = 1.2;

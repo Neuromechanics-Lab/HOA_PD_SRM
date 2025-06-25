@@ -1,6 +1,8 @@
 %Script to calculate CoM excursion
 clear; close all;
-load('X:\ting\shared_ting\Scott\HOA_PD SRM\HOA_PD_SRM_Outputs__24-Apr-2024_wAnalysis.mat')
+% filename = 'X:\ting\shared_ting\Scott\HOA_PD SRM\HOA_PD_SRM_Outputs__24-Apr-2024_wAnalysis.mat';
+filename = 'X:\ting\shared_ting\Scott\HOA_PD SRM\HOA_PD_SRM_Outputs_LR_Averaged_02-May-2024.mat';
+load(filename)
 CoM_Excursion = nan(size(dataAv,1),1);
 CoM_Excursion_time = CoM_Excursion;
 for i = 1:size(dataAv,1)
@@ -17,7 +19,7 @@ try % check to see if CoM_Excursion is already included in dataAv
 catch
     tmp_table = table(CoM_Excursion, CoM_Excursion_time);
     dataAv = [dataAv tmp_table];
-    save('X:\ting\shared_ting\Scott\HOA_PD SRM\HOA_PD_SRM_Outputs__24-Apr-2024_wAnalysis.mat')
+    save(filename)
 end
 %% supporting functions
 function [excursion, excursion_time] = calculateCoMExcursion(CoM, time, dir)
