@@ -4,14 +4,15 @@ addpath('D:\Users\SBOEBIN\Documents\MATLAB\matlabUtilities-master')
 % load data
 fdir = 'X:\ting\shared_ting\Scott\HOA_PD SRM\';
 savedir = 'X:\ting\shared_ting\Scott\HOA_PD SRM\';
-filename = 'HOA_PD_SRM_Outputs__24-Apr-2024';
+filename = 'HOA_PD_SRM_Outputs_LR_Averaged_02-May-2024';
+AnalysisType = 'LR_Averaged'; %analysis type
 load([fdir filename '.mat'])
 
 
 plotopt = true;
 savefigopt = true;
 figdir = 'X:\ting\shared_ting\Scott\HOA_PD SRM\savedfigs\';
-AnalysisType = ''; %analysis type
+
 %% create time indexes
 ind_50_150  = create_ind(0.05,0.15,dataAv.atime(1,:));
 ind_100_200 = create_ind(0.10,0.20,dataAv.atime(1,:));

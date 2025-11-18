@@ -2,7 +2,8 @@ function [output] = HOA_PD_SRM_HandFit(dataAv, participant, direction, mag, Reco
 %HOA_PD_SRM_HandFit() to provide hand corrections to SRM reconstruction
 %   Load in SRM output data table and plot the old reconstruction as well
 %   as reconstruction with gains provided in NewGains.
-% Inputs: 1) dataAv - SRM output table (class = table) Example: load('\\cosmic.bme.emory.edu\labs\ting\shared_ting\Scott\HOA_PD SRM\HOA_PD_SRM_Outputs__19-Mar-2024.mat')
+% Inputs: 1) dataAv - SRM output table (class = table) 
+% Example: load('\\cosmic.bme.emory.edu\labs\ting\shared_ting\Scott\HOA_PD SRM\HOA_PD_SRM_Outputs__19-Mar-2024.mat')
 % 2) participant - Participant ID (dataAv.patient) (class = char or string)
 % Example: participant = "HOA02"
 % 3) direction - direction of perturbation (class = double) Example: direction = 90 or 270
@@ -10,15 +11,16 @@ function [output] = HOA_PD_SRM_HandFit(dataAv, participant, direction, mag, Reco
 % the variable name in dataAv(class = string or char) Example: ReconName = "Recon_Agonist"
 % NewGains - gains selected for hand correction (class = double)
 % Example:NewGains = [10 0 0 0.100] for mSRM
-% Outputs: New SRM reconstruction with associated R2 and VAF along with a plot of original SRM reconstruction (from dataAv) and plot of
+% Outputs: New SRM reconstruction with associated R2 and VAF along with a 
+% plot of original SRM reconstruction (from dataAv) and plot of
 % new SRM reconstruction based on NewGains specified by the user
 
 % Example Command Window Call Sequence: 
-% close all; subj = "PD02"; direc = 90; mag = 10; ReconName = "Recon_Antagonist"; % specify which participant/condition you want
-% ind = find(strcmp(dataAv.patient,subj) & dataAv.direc == direc & dataAv.condition == mag) % Find Index for New Gains
+% subj = "HOA07"; direc = 270; mag = 10; ReconName = "Recon_Agonist_TotalDual_CoM"; % specify which participant/condition you want
+% ind = find(strcmp(dataAv.patient,subj) & dataAv.pertdir_calc_round_deg == direc & dataAv.condition == mag) % Find Index for New Gains
 % NewGains = dataAv.Gains_Antag(ind,:); % set New Gains to be last SRM Fit
 % output = HOA_PD_SRM_HandFit(dataAv, subj, direc, mag, ReconName, NewGains); % run HandFit (run this line after changing NewGains manually)
-% save("\\cosmic.bme.emory.edu\labs\ting\shared_ting\Scott\HOA_PD SRM\HOA_PD_SRM_HandFit_Outputs\" + subj + "_" + num2str(direc) + "_" + num2str(mag) + "_" + ReconName + ".mat","output","-v7.3"); % save
+% save("X:\ting\shared_ting\Scott\HOA_PD SRM\HOA_PD_SRM_HandFit_Outputs\" + subj + "_" + num2str(direc) + "_" + num2str(mag) + "_" + ReconName + ".mat","output","-v7.3"); % save
 
 %% Add Utilities folders - May give warnings depending on which PC you are using
 addpath('D:\Users\SBOEBIN\Documents\MATLAB\SRMUtilities')

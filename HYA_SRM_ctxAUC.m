@@ -1,14 +1,14 @@
 % to calculate AUC for cortical component in HYA SRM Data
 clear; close all; clc
 addpath('D:\Users\SBOEBIN\Documents\MATLAB\matlabUtilities-master')
-%% load data
+% load data
 fdir = 'X:\ting\shared_ting\Scott\HOA_PD SRM\';
 savedir = 'X:\ting\shared_ting\Scott\HOA_PD SRM\';
 
 load([fdir 'HYAStep_SRM_Outputs_15-Aug-2023.mat'])
-%% User input
+% User input
 plotopt = true;
-savefigopt = true;
+savefigopt = false;
 figdir = 'X:\ting\shared_ting\Scott\HOA_PD SRM\savedfigs\';
 AnalysisType = ''; %analysis type
 
@@ -16,9 +16,18 @@ AnalysisType = ''; %analysis type
 % initialize output variables
 ctx_comp_ag  = nan(size(DataAvTable.AgonistRecon_TotalDual_CoM));
 ctx_comp_ag_AUC  = nan(size(DataAvTable.direc));
-
 subctx_comp_ag  = nan(size(DataAvTable.AgonistRecon_TotalDual_CoM));
 subctx_comp_ag_AUC  = nan(size(DataAvTable.direc));
+
+ctx_comp_ag_N1 = nan(size(DataAvTable.AgonistRecon_TotalDual_CoM));
+ctx_comp_ag_AUC_N1  = nan(size(DataAvTable.direc));
+subctx_comp_ag_N1   = nan(size(DataAvTable.AgonistRecon_TotalDual_CoM));
+subctx_comp_ag_AUC_N1   = nan(size(DataAvTable.direc));
+
+ctx_comp_ag_beta = nan(size(DataAvTable.AgonistRecon_TotalDual_CoM));
+ctx_comp_ag_AUC_beta  = nan(size(DataAvTable.direc));
+subctx_comp_ag_beta  = nan(size(DataAvTable.AgonistRecon_TotalDual_CoM));
+subctx_comp_ag_AUC_beta  = nan(size(DataAvTable.direc));
 
 for i = 1:height(DataAvTable)
     %% specify CoM kinematics and time window
@@ -43,7 +52,7 @@ for i = 1:height(DataAvTable)
         a_ag = a; v_ag = v; d_ag = d;
         a_antag = -a; v_antag = -v; d_antag = -d;
     end
-    %% calculate subctx and ctx components for Agonist hSRM
+    %% calculate subctx and ctx components for Agonist hSRM (CoM)
     predictors_ag = [a_ag(ind_time); v_ag(ind_time); d_ag(ind_time);...
         a_ag(ind_time); v_ag(ind_time); d_ag(ind_time)]; % hSRM predictors
     Gains_ag = DataAvTable.Ag_Gains_TotalDual_CoM(i,:); %hSRM reconstruction gains
@@ -55,22 +64,76 @@ for i = 1:height(DataAvTable)
     ctx_comp_ag_AUC(i,:) = trapz(atime(ind_time), tmp_ctx_comp_ag);
     subctx_comp_ag_AUC(i,:) = trapz(atime(ind_time), tmp_subctx_comp_ag);
     
+    %% calculate subctx and ctx components for Agonist hSRM (N1)
+    predictors_ag_N1 = [a_ag(ind_time); v_ag(ind_time); d_ag(ind_time);...
+        DataAvTable.Cz(i,ind_time)]; % hSRM predictors
+    Gains_ag_N1 = DataAvTable.Ag_Gains_TotalDual_CoM(i,:); %hSRM reconstruction gains
+    [Recon_ag_N1, tmp_subctx_comp_ag_N1, tmp_ctx_comp_ag_N1] = assembleTwoChannels(predictors_ag_N1(1:3,:),Gains_ag_N1(1:3),Gains_ag_N1(4),...
+        predictors_ag_N1(4,:),Gains_ag_N1(5),Gains_ag_N1(end),atime(ind_time));
+    
+    ctx_comp_ag_N1(i,:) = tmp_ctx_comp_ag_N1;
+    subctx_comp_ag_N1(i,:) = tmp_subctx_comp_ag_N1;
+    
+    ctx_comp_ag_AUC_N1(i,:) = trapz(atime(ind_time), tmp_ctx_comp_ag_N1);
+    subctx_comp_ag_AUC_N1(i,:) = trapz(atime(ind_time), tmp_subctx_comp_ag_N1);
+    
+        %% calculate subctx and ctx components for Agonist hSRM (beta)
+    predictors_ag_beta = [a_ag(ind_time); v_ag(ind_time); d_ag(ind_time);...
+        DataAvTable.beta_ersp(i,ind_time)]; % hSRM predictors
+    Gains_ag_beta = DataAvTable.Ag_Gains_TotalDual_CoM(i,:); %hSRM reconstruction gains
+    [Recon_ag_beta, tmp_subctx_comp_ag_beta, tmp_ctx_comp_ag_beta] = assembleTwoChannels(predictors_ag_beta(1:3,:),Gains_ag_beta(1:3),Gains_ag_beta(4),...
+        predictors_ag_beta(4,:),Gains_ag_beta(5),Gains_ag_beta(end),atime(ind_time));
+    
+    ctx_comp_ag_beta(i,:) = tmp_ctx_comp_ag_beta;
+    subctx_comp_ag_beta(i,:) = tmp_subctx_comp_ag_beta;
+    
+    ctx_comp_ag_AUC_beta(i,:) = trapz(atime(ind_time), tmp_ctx_comp_ag_beta);
+    subctx_comp_ag_AUC_beta(i,:) = trapz(atime(ind_time), tmp_subctx_comp_ag_beta);
+    
     %% plot components for confirmation
     if plotopt
         figure; set(gcf,'Position',[387.4000 427.4000 1432 489.6000])
-        plotij(1,2,1,1); hold on
+        % hSRM (CoM) Components
+        plotij(3,2,1,1); hold on
         plot(atime(ind_time), Recon_ag,'k','LineWidth',3)
         plot(atime(ind_time), tmp_subctx_comp_ag,'r','LineWidth',1)
         plot(atime(ind_time), tmp_ctx_comp_ag,'b','LineWidth',1)
-        title('hSRM Components'); xlabel('time (s)')
+        title('hSRM (CoM) Components'); xlabel('time (s)')
         legend('Recon','subctx','ctx')
         
-        plotij(1,2,1,2)
+        plotij(3,2,1,2)
         bar([subctx_comp_ag_AUC(i,:) ctx_comp_ag_AUC(i,:)])
         xticklabels({'subctx AUC', 'ctx AUC'})
         xtickangle(45); ylim([0 0.5])
         
-        sgtitle(DataAvTable.Participant(i) + " mag" + num2str(DataAvTable.mag(i)) + " dir" + num2str(DataAvTable.direc(i)))
+        % hSRM (N1) Components
+        plotij(3,2,2,1); hold on
+        plot(atime(ind_time), Recon_ag_N1,'k','LineWidth',3)
+        plot(atime(ind_time), tmp_subctx_comp_ag_N1,'r','LineWidth',1)
+        plot(atime(ind_time), tmp_ctx_comp_ag_N1,'b','LineWidth',1)
+        title('hSRM (N1) Components'); xlabel('time (s)')
+        legend('Recon','subctx','ctx')
+        
+        plotij(3,2,2,2)
+        bar([subctx_comp_ag_AUC_N1(i,:) ctx_comp_ag_AUC_N1(i,:)])
+        xticklabels({'subctx AUC', 'ctx AUC'})
+        xtickangle(45); ylim([0 0.5])
+        
+        % hSRM (beta) Components
+        plotij(3,2,3,1); hold on
+        plot(atime(ind_time), Recon_ag_beta,'k','LineWidth',3)
+        plot(atime(ind_time), tmp_subctx_comp_ag_beta,'r','LineWidth',1)
+        plot(atime(ind_time), tmp_ctx_comp_ag_beta,'b','LineWidth',1)
+        title('hSRM (beta) Components'); xlabel('time (s)')
+        legend('Recon','subctx','ctx')
+        
+        plotij(3,2,3,2)
+        bar([subctx_comp_ag_AUC_beta(i,:) ctx_comp_ag_AUC_beta(i,:)])
+        xticklabels({'subctx AUC', 'ctx AUC'})
+        xtickangle(45); ylim([0 0.5])
+        
+        sgtitle("HYA " + DataAvTable.Participant(i) + " mag" + num2str(DataAvTable.mag(i)) + " dir" + num2str(DataAvTable.direc(i)))
+        
         
         if savefigopt
             saveas(gcf,figdir + "HYA_" + num2str(DataAvTable.Participant(i)) + "_mag" + num2str(DataAvTable.mag(i)) +...
@@ -87,8 +150,16 @@ for i = 1:height(DataAvTable)
 end
 %% concatinate data tables
 %create data table
-T = table(ctx_comp_ag, subctx_comp_ag, ctx_comp_ag_AUC, subctx_comp_ag_AUC);
-T_excel = table(ctx_comp_ag_AUC, subctx_comp_ag_AUC);
+T = table(ctx_comp_ag, subctx_comp_ag, ...
+    ctx_comp_ag_N1, subctx_comp_ag_N1, ...
+    ctx_comp_ag_beta, subctx_comp_ag_beta,...
+    ctx_comp_ag_AUC, subctx_comp_ag_AUC, ...
+    ctx_comp_ag_AUC_N1, subctx_comp_ag_AUC_N1,...
+    ctx_comp_ag_AUC_beta, subctx_comp_ag_AUC_beta);
+
+T_excel = table(ctx_comp_ag_AUC, subctx_comp_ag_AUC,...
+    ctx_comp_ag_AUC_N1, subctx_comp_ag_AUC_N1,...
+    ctx_comp_ag_AUC_beta, subctx_comp_ag_AUC_beta);
 % concatinate tables
 DataAvTable = [DataAvTable T];
 ExcelTable(ExcelTable.Participant == 3,:) = [];
