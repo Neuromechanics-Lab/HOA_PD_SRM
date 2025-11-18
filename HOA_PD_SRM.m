@@ -24,7 +24,7 @@ removeBackLev = 1;
 % Saving options (if true then will save output)
 saveopt = true; %Output
 % SRM reconstruction options
-cSRMs_opt = false;
+cSRMs_opt = false;D
 % Grouping Variables
 direcs = unique(dataAv.pertdir_calc_round_deg); % directions to be analyzed (90 and 270)
 % direcs = 270;
